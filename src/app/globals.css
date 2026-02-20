@@ -1,0 +1,133 @@
+@import "tailwindcss";
+@plugin './hero.js';
+@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@plugin "@tailwindcss/typography";
+
+:root {
+  /* Base Theme Colors */
+  --background: #f7f5f0;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --brand-blue: #1e44d6;
+  --brand-mint: #c2e2e3;
+  --surface-dark: #1e1e1e;
+  --surface-darker: #2a2a2a;
+  --muted: #f3f4f6;             /* Soft backgrounds (e.g., hover states) */
+  --muted-foreground: #6b7280;  /* Subtitles, bio text, timestamps */
+  --border: #e5e7eb;            /* Card borders, horizontal dividers */
+  --danger: #ef4444;            /* Heart icons, error messages */
+}
+
+.dark {
+  --background: #0a0a0a;       /* Deep Black */
+  --foreground: #ededed;       /* Off White */
+  --card: #141414;             /* Slightly lighter black for cards */
+  --border: #262626;           /* Subtle dark borders */
+  --muted-foreground: #a3a3a3; /* Lighter gray for readability */
+  --brand-blue: #3b82f6;       /* Brighter blue for contrast */
+  --brand-mint: #00f5d4;       /* More vibrant mint */
+  --surface-dark: #000000;
+}
+
+@theme inline {
+  /* Map CSS Variables to Tailwind Utility Classes */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-mint: var(--brand-mint);
+  
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-darker: var(--surface-darker);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-danger: var(--danger);
+
+  /* Fonts */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans); 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global text selection styling */
+::selection {
+  background-color: var(--brand-mint);
+  color: #000000;
+}
+
+/* Placeholder styling (Grayed out text) */
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Make the heading placeholder look different */
+.tiptap h1.is-empty::before,
+.tiptap h2.is-empty::before {
+  color: #dee2e6;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Remove default focus outline */
+.tiptap:focus {
+  outline: none;
+}
+
+/* Blockquote styling */
+.tiptap blockquote {
+  border-left: 3px solid #000;
+  padding-left: 1.5rem;
+  font-style: italic;
+  color: #4a4a4a;
+}
+
+/* Task List Styling */
+.tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+.tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.tiptap ul[data-type="taskList"] label {
+  margin-right: 0.5rem;
+  user-select: none;
+}
+
+/* Better Link Styling */
+.tiptap a {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+/* Horizontal Rule Styling */
+.tiptap hr {
+  border: none;
+  border-top: 2px solid #f3f4f6;
+  margin: 3rem 0;
+}
