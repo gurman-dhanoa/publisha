@@ -1,44 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Container from "@/components/shared/Container";
-import { VerticalArticleCard } from "@/components/shared/Article";
+import { VerticalArticleCard, VerticalCardSkeleton } from "@/components/shared/Article";
+import ArticleService from "@/services/article.service";
 
-// --- DUMMY DATA ---
-// Formatted to match the ArticleData interface
-const relatedArticles = [
-  {
-    title: "Mastering React Server Components",
-    excerpt: "A deep dive into how RSCs change the way we build Next.js applications, optimizing payload size and SEO.",
-    image: "https://images.unsplash.com/photo-1555099962-4199c345e5dd?q=80&w=800&auto=format&fit=crop",
-    author: "Basroop",
-    tags: ["nextjs", "react", "architecture"],
-    commentsCount: 24,
-    likesCount: 156,
-  },
-  {
-    title: "The Fall of Troy: Cinematic Analysis",
-    excerpt: "Breaking down the visual framing of the Trojan Horse sequence and how scale dictates tension.",
-    image: "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?q=80&w=800&auto=format&fit=crop",
-    author: "Homer",
-    tags: ["mythology", "cinema"],
-    commentsCount: 89,
-    likesCount: 420,
-  },
-  {
-    title: "AWS Glacier vs S3 Standard: A Cost Breakdown",
-    excerpt: "When does it make sense to transition your static assets to cold storage? A mathematical approach to your AWS bill.",
-    image: "https://images.unsplash.com/photo-1620288627223-53302f4e8c74?q=80&w=800&auto=format&fit=crop",
-    author: "Jane Hopper",
-    tags: ["aws", "cloud", "devops"],
-    commentsCount: 12,
-    likesCount: 67,
-  },
-];
+export default function RelatedArticles({ currentArticleId }) {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-export default function RelatedArticles() {
-  // Animation variants for staggered entrance
+  useEffect(() => {
+    const fetchRelated = async () => {
+      try {
+        // Fetching trending articles as a placeholder for related content
+        const data = await ArticleService.getArticles({ sort: "trending", limit: 4 });
+        
+        // Filter out the current article if its ID is provided
+        const filtered = data.filter(art => art.id !== currentArticleId).slice(0, 3);
+        setArticles(filtered);
+      } catch (error) {
+        console.error("Failed to fetch related articles", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRelated();
+  }, [currentArticleId]);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -53,10 +43,8 @@ export default function RelatedArticles() {
   };
 
   return (
-    // Using bg-card (white) here gives a nice contrast against the bg-background (off-white) of the main article body!
     <section className="w-full bg-card py-24 border-t border-border mt-16">
       <Container>
-        {/* Section Heading */}
         <div className="text-center mb-14">
           <span className="text-brand-blue font-bold uppercase tracking-widest text-xs mb-4 block">
             Keep Reading
@@ -66,7 +54,6 @@ export default function RelatedArticles() {
           </h2>
         </div>
 
-        {/* Articles Grid */}
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center"
           variants={containerVariants}
@@ -74,12 +61,21 @@ export default function RelatedArticles() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {relatedArticles.map((article, index) => (
-            <motion.div key={index} variants={cardVariants} className="w-full">
-              <VerticalArticleCard article={article} />
-            </motion.div>
-          ))}
+          {loading ? (
+            // Show Skeletons while loading
+            [...Array(3)].map((_, i) => <VerticalCardSkeleton key={i} />)
+          ) : (
+            articles.map((article) => (
+              <motion.div key={article.id} variants={cardVariants} className="w-full">
+                <VerticalArticleCard article={article} />
+              </motion.div>
+            ))
+          )}
         </motion.div>
+
+        {!loading && articles.length === 0 && (
+          <p className="text-center text-muted-foreground">No related articles found.</p>
+        )}
       </Container>
     </section>
   );
