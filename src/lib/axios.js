@@ -26,9 +26,9 @@ api.interceptors.request.use(
 
 // RESPONSE Interceptor: Handle Errors Globally
 api.interceptors.response.use(
-  (response) => response,
+  (response) => response.data,
   (error) => {
-    const message = error.response?.data?.message || 'Something went wrong';
+    const message = error.response?.data?.error || 'Something went wrong';
 
     if (error.response?.status === 401) {
       // Token expired or invalid
@@ -37,7 +37,7 @@ api.interceptors.response.use(
       
       // Only redirect if we are on the client side
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     } else {
       toast.error(message);

@@ -1,21 +1,17 @@
 import api from '@/lib/axios';
 
 const AuthService = {
-  // Get current user details using the token in cookies
   me: async () => {
-    const response = await api.get('/auth/me'); // Adjust endpoint as needed
-    return response.data;
+    return await api.get('/authors/profile/me'); 
   },
 
   login: async (credentials) => {
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
+    return await api.post('/authors/login', credentials);
   },
 
-  logout: async () => {
-    // Optional: Call backend to invalidate session
-    return await api.post('/auth/logout');
-  }
+  register: async (userData) => {
+    return await api.post('/authors/register', userData);
+  },
 };
 
 export default AuthService;
