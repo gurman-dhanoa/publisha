@@ -6,6 +6,10 @@ const CategoryService = {
     const response = await api.get('/categories/trending');
     return response.data; 
   },
+  getAll: async () => {
+    const response = await api.get('/categories');
+    return response.data;
+  },
 };
 
 export default CategoryService;

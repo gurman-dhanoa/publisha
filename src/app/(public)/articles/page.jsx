@@ -1,293 +1,208 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Input } from "@heroui/react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Input, Select, SelectItem, Avatar, Chip, Button } from "@heroui/react";
+import { Search, Filter, ArrowUpDown } from "lucide-react";
+import debounce from "lodash/debounce";
 
 import Container from "@/components/shared/Container";
-// Importing the dynamic cards we finalized earlier
-import { HorizontalArticleCard, VerticalArticleCard, ArticleData } from "@/components/shared/Article";
-
-// --- DUMMY DATA ---
-// Updated to perfectly match the ArticleData interface of your cards
-const categories = ["All", "Development", "Politics", "Culture", "Mythology", "Cloud"];
-
-const allArticles = [
-  {
-    id: 1,
-    category: "Development",
-    title: "Building the Kingmaker: Next.js & Complex Data Extraction",
-    excerpt: "Dive deep into the architecture of modern political strategy platforms. Learn how to extract election data, optimize SQL queries, and render blazing-fast dashboards.",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop",
-    author: "Basroop",
-    tags: ["nextjs", "sql", "architecture"],
-    commentsCount: 42,
-    likesCount: 315,
-    isFeatured: true
-  },
-  {
-    id: 2,
-    category: "Culture",
-    title: "Portraits of Punjab: A Visual Renaissance",
-    excerpt: "Exploring the vibrant, realistic depictions and the modern revival of traditional aesthetics in the heart of North India.",
-    image: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=800&auto=format&fit=crop",
-    author: "Basroop",
-    tags: ["culture", "art", "history"],
-    commentsCount: 18,
-    likesCount: 142,
-    isFeatured: false
-  },
-  {
-    id: 3,
-    category: "Mythology",
-    title: "The Odyssey: Cinematic Framing of Polyphemus",
-    excerpt: "Analyzing the visual storytelling techniques used to convey the sheer scale and terror of the legendary cyclops in modern adaptations.",
-    image: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=800&auto=format&fit=crop",
-    author: "Homer",
-    tags: ["mythology", "cinema", "epics"],
-    commentsCount: 56,
-    likesCount: 420,
-    isFeatured: false
-  },
-  {
-    id: 4,
-    category: "Cloud",
-    title: "AWS Cost Optimization: S3 Archiving Strategies",
-    excerpt: "Stop overpaying for static assets. A comprehensive guide to lifecycle rules, Glacier transitions, and estimating long-term storage bills.",
-    image: "https://images.unsplash.com/photo-1620288627223-53302f4e8c74?q=80&w=800&auto=format&fit=crop",
-    author: "Jane Hopper",
-    tags: ["aws", "cloud", "devops"],
-    commentsCount: 12,
-    likesCount: 89,
-    isFeatured: false
-  },
-  {
-    id: 5,
-    category: "Development",
-    title: "Troubleshooting Electron.js Render Pipelines",
-    excerpt: "Solving screen rendering glitches and integrating push notifications seamlessly into your desktop applications.",
-    image: "https://images.unsplash.com/photo-1555099962-4199c345e5dd?q=80&w=800&auto=format&fit=crop",
-    author: "Basroop",
-    tags: ["electron", "desktop", "js"],
-    commentsCount: 24,
-    likesCount: 115,
-    isFeatured: false
-  },
-  {
-    id: 6,
-    category: "Politics",
-    title: "Swing Vote Calculations Logic in SQL",
-    excerpt: "How to structure complex JOINs and handle specific character sets when analyzing constituency voting patterns.",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop",
-    author: "Basroop",
-    tags: ["sql", "data", "politics"],
-    commentsCount: 33,
-    likesCount: 210,
-    isFeatured: false
-  }
-];
+import { VerticalArticleCard, VerticalCardSkeleton } from "@/components/shared/Article";
+import ArticleService from "@/services/article.service";
+import CategoryService from "@/services/category.service";
+import AuthorService from "@/services/author.service";
 
 export default function ArticlesListingPage() {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  // Infinite Scroll State
-  const [visibleCount, setVisibleCount] = useState(3); // Start by showing 3 standard articles
-  const loaderRef = useRef(null);
-
-  // Filtering Logic
-  const filteredArticles = allArticles.filter(article => {
-    const matchesCategory = activeCategory === "All" || article.category === activeCategory;
-    const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          article.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+  // Filter States
+  const [filters, setFilters] = useState({
+    search: "",
+    category: "all",
+    author: "all",
+    sort: "latest"
   });
 
-  const featuredArticle = filteredArticles.find(a => a.isFeatured);
-  const standardArticles = filteredArticles.filter(a => !a.isFeatured);
+  // Data States
+  const [articles, setArticles] = useState([]);
+  const [options, setOptions] = useState({ categories: [], authors: [] });
+  const [loading, setLoading] = useState(true);
 
-  // Intersection Observer for Infinite Scroll
+  // 1. Fetch Filter Options (Categories & Authors)
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const target = entries[0];
-        if (target.isIntersecting && visibleCount < standardArticles.length) {
-          // Simulate network delay for smooth UX, then load 3 more
-          setTimeout(() => {
-            setVisibleCount((prev) => prev + 3);
-          }, 500);
-        }
-      },
-      { threshold: 0.1 } // Trigger when 10% of the loader is visible
-    );
-
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current);
-    }
-
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    const fetchOptions = async () => {
+      try {
+        const [cats, auths] = await Promise.all([
+          CategoryService.getAll(),
+          AuthorService.getAll()
+        ]);
+        setOptions({ categories: cats, authors: auths });
+      } catch (err) {
+        console.error("Failed to load filters", err);
+      }
     };
-  }, [visibleCount, standardArticles.length]);
+    fetchOptions();
+  }, []);
 
-  // Reset visible count if user searches or filters
-  useEffect(() => {
-    setVisibleCount(3);
-  }, [searchQuery, activeCategory]);
+  // 2. Fetch Articles Logic
+  const fetchArticles = async (currentFilters) => {
+    try {
+      setLoading(true);
+      const params = {
+        page: 1,
+        limit: 12,
+        status: 'published',
+        sort: currentFilters.sort,
+        category: currentFilters.category === "all" ? undefined : currentFilters.category,
+        author: currentFilters.author === "all" ? undefined : currentFilters.author,
+        search: currentFilters.search || undefined
+      };
 
-  // Animation Variants
-  const fadeUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+      const res = await ArticleService.getArticles(params);
+      setArticles(res);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  // 3. Debounced Search
+  const debouncedFetch = useCallback(
+    debounce((f) => fetchArticles(f), 500),
+    []
+  );
+
+  useEffect(() => {
+    debouncedFetch(filters);
+    return debouncedFetch.cancel;
+  }, [filters, debouncedFetch]);
+
+  const updateFilter = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({ search: "", category: "all", author: "all", sort: "latest" });
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans pb-24">
-      
-      {/* ================================================================= */}
-      {/* 1. PAGE HEADER & FILTER BAR                                       */}
-      {/* ================================================================= */}
-      <section className="pt-20 pb-10">
+    <div className="min-h-screen bg-background pb-24">
+      {/* FILTER HEADER */}
+      <section className="pt-16 pb-8 border-b border-border bg-card/50 backdrop-blur-md sticky top-20 z-30">
         <Container>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-border pb-8">
-            <div className="max-w-2xl">
-              <h1 className="text-5xl font-serif font-bold leading-tight mb-4 text-foreground">
-                The Journal
-              </h1>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                Insights, tutorials, and stories from our top authors. Explore everything from data architecture to cultural history.
-              </p>
-            </div>
-            
-            {/* Search Input */}
-            <div className="w-full md:w-80 shrink-0">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            {/* Search */}
+            <div className="lg:col-span-4">
               <Input
-                radius="full"
-                placeholder="Search articles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                startContent={<Search className="text-muted-foreground ml-1" size={18} />}
-                classNames={{
-                  inputWrapper: "bg-card border-none shadow-sm h-14 focus-within:ring-2 ring-brand-mint transition-all",
-                  input: "text-base text-foreground placeholder:text-muted-foreground",
-                }}
+                placeholder="Search archives..."
+                variant="bordered"
+                radius="none"
+                value={filters.search}
+                onChange={(e) => updateFilter("search", e.target.value)}
+                startContent={<Search size={18} className="text-muted-foreground" />}
+                classNames={{ inputWrapper: "border-border h-12 bg-background" }}
               />
             </div>
-          </div>
 
-          {/* Category Pills */}
-          <div className="flex flex-wrap items-center gap-3 pt-8 pb-4">
-            <span className="text-muted-foreground mr-2 hidden md:flex items-center gap-1 text-sm font-bold uppercase tracking-widest">
-              <Filter size={14} /> Topics:
-            </span>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-5 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300
-                  ${activeCategory === cat 
-                    ? "bg-foreground text-background shadow-md" 
-                    : "bg-card text-muted-foreground border border-border hover:border-foreground"
-                  }`}
+            {/* Category Select */}
+            <div className="lg:col-span-3">
+              <Select 
+                placeholder="All Categories" 
+                variant="bordered"
+                radius="none"
+                selectedKeys={[filters.category]}
+                onSelectionChange={(keys) => updateFilter("category", Array.from(keys)[0])}
+                classNames={{ trigger: "border-border h-12 bg-background" }}
               >
-                {cat}
-              </button>
-            ))}
+                <SelectItem key="all">All Categories</SelectItem>
+                {options.categories.map((cat) => (
+                  <SelectItem key={cat.slug}>{cat.name}</SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            {/* Author Select */}
+            <div className="lg:col-span-3">
+              <Select 
+                placeholder="All Authors" 
+                variant="bordered"
+                radius="none"
+                selectedKeys={[filters.author]}
+                onSelectionChange={(keys) => updateFilter("author", Array.from(keys)[0])}
+                classNames={{ trigger: "border-border h-12 bg-background" }}
+              >
+                <SelectItem key="all">All Authors</SelectItem>
+                {options.authors.map((auth) => (
+                  <SelectItem key={auth.id} textValue={auth.name}>
+                    <div className="flex items-center gap-2">
+                      <Avatar src={auth.avatar_url} size="sm" />
+                      <span>{auth.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            {/* Sort */}
+            <div className="lg:col-span-2">
+              <Select 
+                variant="bordered"
+                radius="none"
+                selectedKeys={[filters.sort]}
+                onSelectionChange={(keys) => updateFilter("sort", Array.from(keys)[0])}
+                startContent={<ArrowUpDown size={16} />}
+                classNames={{ trigger: "border-border h-12 bg-background" }}
+              >
+                <SelectItem key="latest">Latest</SelectItem>
+                <SelectItem key="popular">Popular</SelectItem>
+                <SelectItem key="trending">Trending</SelectItem>
+              </Select>
+            </div>
+          </div>
+
+          {/* Active Chips */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {filters.category !== "all" && (
+              <Chip radius="none" onClose={() => updateFilter("category", "all")} variant="flat" className="bg-brand-blue/10 text-brand-blue font-bold uppercase text-[10px]">
+                Category: {filters.category}
+              </Chip>
+            )}
+            {filters.author !== "all" && (
+              <Chip radius="none" onClose={() => updateFilter("author", "all")} variant="flat" className="bg-brand-mint/10 text-brand-mint font-bold uppercase text-[10px]">
+                Author: {options.authors.find(a => a.id.toString() === filters.author.toString())?.name}
+              </Chip>
+            )}
+            {(filters.category !== "all" || filters.author !== "all" || filters.search) && (
+              <Button size="sm" variant="light" onPress={clearFilters} className="text-[10px] font-bold uppercase tracking-widest px-0 ml-2">
+                Clear All
+              </Button>
+            )}
           </div>
         </Container>
       </section>
 
-      {/* ================================================================= */}
-      {/* 2. FEATURED ARTICLE                                               */}
-      {/* ================================================================= */}
-      <AnimatePresence>
-        {featuredArticle && (
-          <motion.section 
-            initial="hidden" animate="visible" exit={{ opacity: 0, height: 0 }} variants={fadeUp}
-            className="pb-16"
-          >
-            <Container>
-              <div className="relative">
-                <div className="absolute top-4 left-4 z-10 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase text-brand-blue">
-                  Featured
-                </div>
-                {/* Reusing your Horizontal Article Card */}
-                <HorizontalArticleCard article={featuredArticle} />
-              </div>
-            </Container>
-          </motion.section>
-        )}
-      </AnimatePresence>
-
-      {/* ================================================================= */}
-      {/* 3. STANDARD ARTICLES GRID                                         */}
-      {/* ================================================================= */}
-      <section>
-        <Container>
-          {standardArticles.length > 0 ? (
-            <motion.div 
-              initial="hidden" animate="visible" variants={staggerContainer}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center"
-            >
-              <AnimatePresence>
-                {/* Only render up to the 'visibleCount' limit */}
-                {standardArticles.slice(0, visibleCount).map((article) => (
-                  <motion.div 
-                    key={article.id} 
-                    variants={fadeUp}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-full"
-                  >
-                    {/* Reusing your Vertical Article Card */}
-                    <VerticalArticleCard article={article} />
-                  </motion.div>
+      {/* ARTICLE GRID */}
+      <Container className="pt-12">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map(i => <VerticalCardSkeleton key={i} />)}
+          </div>
+        ) : (
+          <>
+            {articles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {articles.map((art) => (
+                  <VerticalArticleCard key={art.id} article={art} />
                 ))}
-              </AnimatePresence>
-            </motion.div>
-          ) : (
-            !featuredArticle && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center">
-                <h3 className="text-2xl font-serif font-bold text-foreground mb-2">No articles found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or category filters.</p>
-              </motion.div>
-            )
-          )}
-
-          {/* ================================================================= */}
-          {/* 4. INFINITE SCROLL TRIGGER / LOADER                               */}
-          {/* ================================================================= */}
-          {standardArticles.length > 0 && (
-            <div 
-              ref={loaderRef} 
-              className="mt-16 flex justify-center py-8 h-24"
-            >
-              {visibleCount < standardArticles.length ? (
-                <motion.div 
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="flex items-center gap-2 text-muted-foreground font-bold tracking-widest uppercase text-xs"
-                >
-                  <Loader2 className="animate-spin" size={16} /> Loading Stories...
-                </motion.div>
-              ) : (
-                <div className="text-muted-foreground font-bold tracking-widest uppercase text-xs">
-                  You've reached the end
-                </div>
-              )}
-            </div>
-          )}
-        </Container>
-      </section>
-
+              </div>
+            ) : (
+              <div className="py-32 text-center border-2 border-dashed border-border flex flex-col items-center">
+                <Filter size={48} className="text-muted-foreground mb-4 opacity-20" />
+                <h3 className="text-xl font-serif font-bold">No results match your criteria</h3>
+                <p className="text-muted-foreground mt-2">Try resetting your filters to see more stories.</p>
+              </div>
+            )}
+          </>
+        )}
+      </Container>
     </div>
   );
 }
