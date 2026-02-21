@@ -1,19 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams } from "next/navigation"; // Added Link
 import { Avatar, Button, Image, Divider, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
-import { Twitter, Instagram, Linkedin } from "lucide-react";
+import { Twitter, Instagram, Linkedin, TrendingUp, Layers } from "lucide-react";
 import Container from "@/components/shared/Container";
 import RelatedArticles from "@/components/RelatedArticles";
 import ArticleService from "@/services/article.service";
+import CollectionService from "@/services/collection.service";
 import dayjs from "dayjs";
+import Link from "next/link";
 
 export default function ArticleDetailPage() {
     const { slug } = useParams();
     const [article, setArticle] = useState(null);
+    const [trendingArticles, setTrendingArticles] = useState([]);
+    const [trendingCollections, setTrendingCollections] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [sidebarLoading, setSidebarLoading] = useState(true);
 
     useEffect(() => {
         const fetchArticle = async () => {
@@ -26,7 +31,24 @@ export default function ArticleDetailPage() {
                 setLoading(false);
             }
         };
+
+        const fetchSidebarData = async () => {
+            try {
+                const [articles, collections] = await Promise.all([
+                    ArticleService.getArticles({ sort: 'trending', limit: 5 }),
+                    CollectionService.getPopular(5)
+                ]);
+                setTrendingArticles(articles);
+                setTrendingCollections(collections);
+            } catch (error) {
+                console.error("Sidebar data fetch failed", error);
+            } finally {
+                setSidebarLoading(false);
+            }
+        };
+
         fetchArticle();
+        fetchSidebarData();
     }, [slug]);
 
     if (loading) return <ArticleDetailSkeleton />;
@@ -41,17 +63,14 @@ export default function ArticleDetailPage() {
         <div className="min-h-screen bg-background text-foreground font-sans">
             <Container>
                 <main className="py-10 lg:py-16 flex flex-col lg:flex-row gap-16">
-                    {/* LEFT COLUMN: MAIN CONTENT */}
+                    {/* LEFT COLUMN */}
                     <motion.div className="w-full lg:w-[65%]" initial="hidden" animate="visible">
-                        {/* Breadcrumbs */}
-                        <motion.div variants={fadeIn} className="text-xs text-muted-foreground font-medium tracking-wide mb-6">
+                        {/* ... (Existing Article Content) ... */}
+                        <motion.div variants={fadeIn} className="text-xs text-muted-foreground font-medium mb-6">
                             Home / Blog / <span className="text-foreground">{article.title}</span>
                         </motion.div>
-
-                        <motion.h1 variants={fadeIn} className="text-5xl lg:text-6xl font-serif text-foreground leading-[1.15] mb-8">
-                            {article.title}
-                        </motion.h1>
-
+                        <motion.h1 variants={fadeIn} className="text-5xl lg:text-6xl font-serif mb-8">{article.title}</motion.h1>
+                        
                         {/* Author Metadata */}
                         <motion.div variants={fadeIn} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-10 text-xs text-muted-foreground">
                             <div className="flex items-center gap-3">
@@ -99,9 +118,11 @@ export default function ArticleDetailPage() {
                     </motion.div>
 
                     {/* RIGHT COLUMN: SIDEBAR */}
-                    <motion.aside className="w-full lg:w-[35%] flex flex-col gap-12" initial="hidden" animate="visible">
+                    <motion.aside className="w-full lg:w-[35%] flex flex-col gap-10" initial="hidden" animate="visible">
+                        
+                        {/* Social Follow */}
                         <motion.div variants={fadeIn}>
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-4">Follow Publisha</h3>
+                            <h3 className="text-[10px] uppercase font-bold tracking-widest mb-4 opacity-60">Follow Us</h3>
                             <div className="flex gap-3">
                                 <SocialIcon Icon={Twitter} />
                                 <SocialIcon Icon={Linkedin} />
@@ -109,57 +130,70 @@ export default function ArticleDetailPage() {
                             </div>
                         </motion.div>
 
-                        <Divider />
+                        <Divider className="opacity-50" />
 
-                        <motion.div variants={fadeIn}>
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-4">Summary</h3>
-                            <p className="text-sm text-muted-foreground italic">"{article.summary}"</p>
+                        {/* Summary Widget */}
+                        <motion.div variants={fadeIn} className="bg-card p-6 border border-border">
+                            <h3 className="text-[10px] uppercase font-bold tracking-widest mb-3 text-brand-blue">In Brief</h3>
+                            <p className="text-sm text-foreground/80 leading-relaxed italic">"{article.summary}"</p>
                         </motion.div>
 
-                        <Divider className="bg-border" />
-
-                        {/* Popular Articles */}
+                        {/* Dynamic Trending Articles */}
                         <motion.div variants={fadeIn}>
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-foreground">
-                                Popular Articles
-                            </h3>
-                            <ul className="flex flex-col gap-4 text-sm text-muted-foreground">
-                                <ListItem text="Building the Kingmaker: Next.js Architecture" />
-                                <ListItem text="AWS Cost Optimization Strategies" />
-                                <ListItem text="Swing Vote Calculations in SQL" />
-                                <ListItem text="The Odyssey: Cinematic Framing" />
-                                <ListItem text="Troubleshooting Electron.js Pipelines" />
+                            <div className="flex items-center gap-2 mb-6">
+                                <TrendingUp size={16} className="text-brand-blue" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Trending Stories</h3>
+                            </div>
+                            <ul className="flex flex-col gap-5">
+                                {sidebarLoading ? (
+                                    [1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full rounded-none" />)
+                                ) : (
+                                    trendingArticles.map((art) => (
+                                        <ListItem 
+                                            key={art.id} 
+                                            text={art.title} 
+                                            href={`/articles/${art.slug}`}
+                                        />
+                                    ))
+                                )}
                             </ul>
                         </motion.div>
 
-                        <Divider className="bg-border" />
+                        <Divider className="opacity-50" />
 
-                        {/* Popular Videos */}
+                        {/* Dynamic Trending Collections */}
                         <motion.div variants={fadeIn}>
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-foreground">
-                                Popular Videos
-                            </h3>
-                            <ul className="flex flex-col gap-4 text-sm text-muted-foreground">
-                                <ListItem text="Suffering with lack of responsibility?" />
-                                <ListItem text="Thinking traps: how to let go of negative thoughts" />
-                                <ListItem text="Breast Cancer Clinical Trials: 5 Common Misconceptions" />
+                            <div className="flex items-center gap-2 mb-6">
+                                <Layers size={16} className="text-brand-blue" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Popular Collections</h3>
+                            </div>
+                            <ul className="flex flex-col gap-5">
+                                {sidebarLoading ? (
+                                    [1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full rounded-none" />)
+                                ) : (
+                                    trendingCollections.map((col) => (
+                                        <ListItem 
+                                            key={col.id} 
+                                            text={col.name} 
+                                            href={`/collections/${col.slug}`} 
+                                            subtext={`${col.articles_count} Articles`}
+                                        />
+                                    ))
+                                )}
                             </ul>
                         </motion.div>
 
-                        {/* CTA Widget */}
-                        <motion.div variants={fadeIn} className="mt-4">
-                            <div className="bg-surface-dark p-10 rounded-sm text-center flex flex-col items-center justify-center shadow-lg">
-                                <h3 className="text-white text-2xl font-serif mb-2 leading-tight">
-                                    Join The <br /> Publisha Club
-                                </h3>
-                                <p className="text-gray-400 text-xs mb-8">
-                                    Get exclusive access to premium tools<br />and AI writing assistants.
-                                </p>
+                        {/* Newsletter CTA */}
+                        <motion.div variants={fadeIn} className="sticky top-24">
+                            <div className="bg-foreground p-8 text-center shadow-2xl">
+                                <h3 className="text-background text-2xl font-serif mb-2">The Collective</h3>
+                                <p className="text-background/60 text-[10px] uppercase tracking-widest mb-6">Exclusive Editorial Insight</p>
                                 <Button
-                                    radius="full"
-                                    className="bg-brand-mint hover:bg-white text-black font-bold text-xs uppercase tracking-widest px-8 py-6 transition-all shadow-md"
+                                    radius="none"
+                                    fullWidth
+                                    className="bg-background text-foreground font-bold text-xs uppercase tracking-widest py-6"
                                 >
-                                    Join Now
+                                    Subscribe Now
                                 </Button>
                             </div>
                         </motion.div>
@@ -167,12 +201,11 @@ export default function ArticleDetailPage() {
                     </motion.aside>
                 </main>
             </Container>
-            <RelatedArticles />
+            <RelatedArticles currentArticleId={article.id} />
         </div>
     );
 }
 
-// --- Helper Skeleton ---
 const ArticleDetailSkeleton = () => (
     <Container className="py-16">
         <div className="flex flex-col lg:flex-row gap-16">
@@ -197,9 +230,17 @@ const SocialIcon = ({ Icon }) => (
     </button>
 );
 
-const ListItem = ({ text }) => (
-    <li className="flex items-start gap-2 group cursor-pointer">
-        <span className="text-muted-foreground mt-0.5 group-hover:text-brand-blue transition-colors">•</span>
-        <span className="group-hover:text-brand-blue transition-colors leading-snug">{text}</span>
+const ListItem = ({ text, href, subtext }) => {
+    return <li className="group cursor-pointer">
+        <Link href={href || "#"} className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-foreground group-hover:text-brand-blue transition-colors leading-snug line-clamp-2">
+                {text}
+            </span>
+            {subtext && (
+                <span className="text-[10px] uppercase tracking-tighter text-muted-foreground font-bold">
+                    {subtext}
+                </span>
+            )}
+        </Link>
     </li>
-);
+};
