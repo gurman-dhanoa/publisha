@@ -13,7 +13,8 @@ export const VerticalArticleCard = ({ article }) => {
       <Card shadow="sm" radius="none" className="bg-card border border-border h-full flex flex-col">
         <Link href={`/articles/${article.slug}`}>
           <Image
-            removeWrapper
+            width={600}
+            height={400}
             alt={article.title}
             className="w-full h-[240px] object-cover rounded-none"
             src={article.image_url || "https://via.placeholder.com/400x240?text=No+Image"}
@@ -79,7 +80,8 @@ export const HorizontalArticleCard = ({ article }) => {
         {/* Image Section */}
         <Link href={`/articles/${article.slug}`} className="w-full md:w-5/12 shrink-0">
           <Image
-            removeWrapper
+            width={600}
+            height={400}
             alt={article.title}
             className="w-full h-full min-h-[300px] md:min-h-[400px] object-cover rounded-none"
             src={article.image_url || "https://via.placeholder.com/600x400?text=Publisha+Editorial"}
