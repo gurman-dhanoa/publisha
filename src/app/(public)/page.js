@@ -18,6 +18,8 @@ import {
 import Container from "@/components/shared/Container"; 
 import { HorizontalArticleCard, VerticalArticleCard } from "@/components/shared/Article"; 
 import Link from "next/link";
+import HeroSection from "@/components/home/HeroSection";
+import TrendingSection from "@/components/home/TrendingArticles";
 
 // --- DUMMY DATA ---
 const trendingCategories = ["Next.js", "SQL Architecture", "Mythology", "Cinematography", "AWS Optimization"];
@@ -104,54 +106,7 @@ export default function HomePage() {
       {/* ================================================================= */}
       {/* 1. HERO SEARCH SECTION                                              */}
       {/* ================================================================= */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
-        <Container className="flex flex-col items-center justify-center text-center">
-          <motion.div 
-            initial="hidden" animate="visible" variants={staggerContainer}
-            className="relative z-10 w-full max-w-3xl flex flex-col items-center"
-          >
-            <motion.span variants={fadeUp} className="text-brand-mint mb-4">
-              <Feather size={32} className="text-muted-foreground" />
-            </motion.span>
-            
-            <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-serif font-bold tracking-tight leading-[1.1] mb-8">
-              Discover extraordinary <br className="hidden md:block" />
-              ideas & stories.
-            </motion.h1>
-
-            <motion.div variants={fadeUp} className="w-full relative rounded-full bg-card group shadow-sm">
-              <Input
-                radius="full"
-                size="lg"
-                placeholder="Search by author, article, or topic..."
-                startContent={<Search className="text-muted-foreground ml-2" />}
-                variant="bordered"
-                endContent={
-                  <Button radius="full" className="bg-foreground text-background px-8 font-medium">
-                    Search
-                  </Button>
-                }
-                classNames={{
-                  inputWrapper: "h-16 bg-card border-2 focus-within:border-border group-hover:border-border transition-all px-4 shadow-none",
-                  input: "text-lg text-foreground placeholder:text-muted-foreground ml-2",
-                }}
-              />
-            </motion.div>
-
-            {/* Trending Searches */}
-            <motion.div variants={fadeUp} className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm">
-              <span className="text-muted-foreground flex items-center gap-2 font-medium">
-                <TrendingUp size={16} /> Trending:
-              </span>
-              {trendingCategories.map((cat) => (
-                <button key={cat} className="px-4 py-1.5 rounded-full border border-border text-muted-foreground hover:border-foreground hover:text-foreground transition-colors bg-card/50 backdrop-blur-sm">
-                  {cat}
-                </button>
-              ))}
-            </motion.div>
-          </motion.div>
-        </Container>
-      </section>
+      <HeroSection />
 
       {/* ================================================================= */}
       {/* 2. STATS SECTION                                                  */}
@@ -173,33 +128,7 @@ export default function HomePage() {
       {/* ================================================================= */}
       {/* 3. POPULAR ARTICLES SECTION (Dynamic)                               */}
       {/* ================================================================= */}
-      <section className="py-16">
-        <Container>
-          <div className="flex justify-between items-end mb-12">
-            <h2 className="text-4xl font-serif font-bold text-foreground">Trending Now</h2>
-            <Button variant="light" endContent={<ArrowRight size={16} />} className="text-muted-foreground hover:text-foreground">
-              View all
-            </Button>
-          </div>
-
-          <motion.div 
-            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
-            className="flex flex-col gap-12"
-          >
-            {/* Featured Horizontal Card */}
-            <motion.div variants={fadeUp} className="w-full flex justify-center">
-              <HorizontalArticleCard article={featuredArticle} />
-            </motion.div>
-
-            {/* Grid of Vertical Cards */}
-            <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
-              {recentArticles.map((article, index) => (
-                <VerticalArticleCard key={index} article={article} />
-              ))}
-            </motion.div>
-          </motion.div>
-        </Container>
-      </section>
+      <TrendingSection />
 
       {/* ================================================================= */}
       {/* 4. NEW SECTION: CURATED COLLECTIONS                               */}
