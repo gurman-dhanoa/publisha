@@ -9,6 +9,10 @@ const CollectionService = {
     const response = await api.get(`/collections/slug/${slug}`);
     return response.data;
   },
+  getByAuthor: async (authorId) => {
+    const response = await api.get(`/collections/author/${authorId}`);
+    return response.data;
+  }
 };
 
 export default CollectionService;

@@ -1,158 +1,261 @@
 "use client";
 
-import React, { useState } from "react";
-import { Input, Button, Avatar, Card, CardBody, Chip } from "@heroui/react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Button, Avatar, Card, CardBody, Chip, Skeleton } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  BookOpen,
-  Users,
-  Filter,
-  ArrowRight,
-  MapPin
-} from "lucide-react";
-
-import Container from "@/components/shared/Container";
+import { Search, Filter, ArrowRight } from "lucide-react";
+import debounce from "lodash/debounce";
 import Link from "next/link";
-
-// --- DUMMY DATA ---
-const categories = ["All", "Technology", "Mythology", "Culture", "Health", "Fiction", "Arts"];
-
-const authors = [
-  {
-    id: 1,
-    name: "Basroop",
-    role: "Full-Stack Developer",
-    category: "Technology",
-    bio: "Specializing in Next.js, complex data extraction, and building robust political strategy platforms like Kingmaker.",
-    image: "https://i.pravatar.cc/150?u=basroop",
-    location: "Punjab, India",
-    stats: { articles: 42, followers: "12.4K", views: "850K" }
-  },
-  {
-    id: 2,
-    name: "Helen Kotovski",
-    role: "Music Historian",
-    category: "Arts",
-    bio: "Exploring the intricacies of classical instruments and the rich history of orchestral music and pianoforte evolution.",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop",
-    location: "London, UK",
-    stats: { articles: 128, followers: "45K", views: "1.2M" }
-  },
-  {
-    id: 3,
-    name: "Homer",
-    role: "Epic Poet & Analyst",
-    category: "Mythology",
-    bio: "Breaking down the cinematic framing and storytelling of ancient Greek epics and the visual scale of the Trojan War.",
-    image: "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?q=80&w=150&auto=format&fit=crop",
-    location: "Ionia",
-    stats: { articles: 14, followers: "8.2K", views: "300K" }
-  },
-  {
-    id: 4,
-    name: "Jane Hopper",
-    role: "Fiction Writer",
-    category: "Fiction",
-    bio: "Weaving narratives that blend supernatural elements with 1980s nostalgia and deep character psychological studies.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop",
-    location: "Hawkins, IN",
-    stats: { articles: 31, followers: "102K", views: "2.5M" }
-  }
-];
+import dayjs from "dayjs";
+import { encodeId } from "@/lib/hashids";
+import Container from "@/components/shared/Container";
+import AuthorService from "@/services/author.service";
+import CategoryService from "@/services/category.service";
 
 export default function AuthorsListingPage() {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
+  // --- UI States ---
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const searchInputRef = useRef(null);
 
-  const filteredAuthors = authors.filter(author => {
-    const matchesCategory = activeCategory === "All" || author.category === activeCategory;
-    const matchesSearch = author.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      author.role.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+  // --- Filter & Data States ---
+  const [authors, setAuthors] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [filters, setFilters] = useState({
+    search: "",
+    category: "All",
   });
+
+  // 1. Fetch Metadata (Categories)
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const cats = await CategoryService.getAll();
+        setCategories(cats);
+      } catch (err) {
+        console.error("Categories fetch error:", err);
+      }
+    };
+    fetchMetadata();
+  }, []);
+
+  // 2. Fetch Authors Logic
+  const fetchAuthors = async (currentFilters) => {
+    try {
+      setLoading(true);
+      // Constructing params based on what AuthorService accepts
+      const params = {
+        category:
+          currentFilters.category === "All"
+            ? undefined
+            : currentFilters.category,
+        search: currentFilters.search || undefined,
+      };
+
+      const res = await AuthorService.getAll(params);
+      setAuthors(res);
+    } catch (err) {
+      console.error("Authors fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 3. Debounced Search Integration
+  const debouncedFetch = useCallback(
+    debounce((f) => fetchAuthors(f), 500),
+    [],
+  );
+
+  useEffect(() => {
+    debouncedFetch(filters);
+    return debouncedFetch.cancel;
+  }, [filters, debouncedFetch]);
+
+  // --- Handlers ---
+  const updateFilter = (key, value) =>
+    setFilters((prev) => ({ ...prev, [key]: value }));
+
+  const handleSearchToggle = () => {
+    setIsSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      updateFilter("search", "");
+    }
+  };
+
+  const CATEGORY_LIMIT = 7;
+  const displayedCategories = showAllCategories
+    ? categories
+    : categories.slice(0, CATEGORY_LIMIT);
+  const hasMoreCategories = categories.length > CATEGORY_LIMIT;
 
   const staggerContainer = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans pb-24 selection:bg-brand-mint selection:text-black">
-
-      {/* 1. HEADER & SEARCH SECTION */}
-      <section className="pt-20 pb-12 bg-card border-b border-border shadow-sm sticky top-20 z-30">
+    <div className="min-h-screen bg-background text-foreground font-sans pb-24">
+      {/* ========================================================== */}
+      {/* 1. HEADER & SEARCH SECTION                                 */}
+      {/* ========================================================== */}
+      <section className="pt-24 pb-10 bg-card border-b border-border shadow-sm z-30">
         <Container>
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-left">
-              <h1 className="text-4xl font-serif font-bold text-foreground mb-2">
+          <div className="flex flex-col md:flex-row items-end justify-between gap-8 pb-8 border-b border-border">
+            <div className="text-left w-full max-w-2xl">
+              <motion.h1
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-5xl md:text-7xl font-serif font-bold text-foreground mb-4 tracking-tighter"
+              >
                 Our Brilliant Minds
-              </h1>
-              <p className="text-muted-foreground">Discover experts shaping the conversation.</p>
+              </motion.h1>
+              <p className="text-muted-foreground text-lg italic">
+                Discover the experts and storytellers shaping the conversation.
+              </p>
             </div>
 
-            <div className="w-full md:w-96 shrink-0">
-              <Input
-                radius="full"
-                placeholder="Search authors..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                startContent={<Search className="text-muted-foreground ml-1" size={18} />}
-                classNames={{
-                  inputWrapper: "bg-background border border-border h-14 focus-within:ring-2 ring-brand-mint transition-all",
-                  input: "text-base",
+            {/* Expanding Search Bar */}
+            <div className="flex justify-end h-14 w-full md:w-auto">
+              <motion.div
+                initial={false}
+                animate={{
+                  width: isSearchOpen
+                    ? typeof window !== "undefined" && window.innerWidth < 768
+                      ? "100%"
+                      : "350px"
+                    : "56px",
                 }}
-              />
+                className={`relative flex items-center h-14 rounded-full transition-colors duration-300 ${
+                  isSearchOpen
+                    ? "bg-background border-2 border-foreground"
+                    : "bg-background border border-border hover:border-foreground"
+                }`}
+              >
+                <button
+                  onClick={handleSearchToggle}
+                  className="absolute left-0 top-0 w-14 h-14 flex items-center justify-center z-20 text-foreground rounded-full outline-none"
+                >
+                  <Search size={20} strokeWidth={isSearchOpen ? 2.5 : 1.5} />
+                </button>
+
+                <AnimatePresence>
+                  {isSearchOpen && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 left-14 right-14"
+                    >
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder="Search authors..."
+                        value={filters.search}
+                        onChange={(e) => updateFilter("search", e.target.value)}
+                        className="w-full h-full bg-transparent outline-none text-foreground placeholder:text-muted-foreground text-base"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 mt-8">
-            <span className="text-muted-foreground mr-2 text-xs font-bold uppercase tracking-widest flex items-center gap-1">
-              <Filter size={14} /> Topics:
+          {/* DYNAMIC CATEGORY PILLS */}
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 pt-8">
+            <span className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] mr-2">
+              <Filter size={14} /> Expertise:
             </span>
-            {categories.map((cat) => (
+
+            <button
+              onClick={() => updateFilter("category", "All")}
+              className={`px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all
+                ${filters.category === "All" ? "bg-foreground text-background shadow-md" : "bg-background text-muted-foreground border border-border hover:border-foreground hover:text-foreground"}`}
+            >
+              All Experts
+            </button>
+
+            {displayedCategories.map((cat) => (
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
+                key={cat.id}
+                onClick={() => updateFilter("category", cat.slug)}
                 className={`px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all
-                  ${activeCategory === cat
-                    ? "bg-foreground text-background shadow-md"
-                    : "bg-background text-muted-foreground border border-border hover:border-foreground"
-                  }`}
+                  ${filters.category === cat.slug ? "bg-foreground text-background shadow-md" : "bg-background text-muted-foreground border border-border hover:border-foreground hover:text-foreground"}`}
               >
-                {cat}
+                {cat.name}
               </button>
             ))}
+
+            {hasMoreCategories && !showAllCategories && (
+              <button
+                onClick={() => setShowAllCategories(true)}
+                className="px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all bg-muted text-foreground border border-transparent hover:border-border"
+              >
+                + {categories.length - CATEGORY_LIMIT} More
+              </button>
+            )}
           </div>
         </Container>
       </section>
 
-      {/* 2. AUTHORS LIST (Horizontal Cards) */}
+      {/* ========================================================== */}
+      {/* 2. AUTHORS LIST (Horizontal Cards)                           */}
+      {/* ========================================================== */}
       <section className="py-16">
         <Container className="max-w-5xl">
-          {filteredAuthors.length > 0 ? (
-            <motion.div
-              initial="hidden" animate="visible" variants={staggerContainer}
-              className="flex flex-col gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredAuthors.map((author) => (
-                  <motion.div
-                    key={author.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                  >
-                    <AuthorHorizontalCard author={author} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          ) : (
-            <div className="py-20 text-center">
-              <h3 className="text-xl font-serif font-bold">No authors found</h3>
+          {loading ? (
+            <div className="space-y-6">
+              {[1, 2, 3].map((i) => (
+                <AuthorHorizontalSkeleton key={i} />
+              ))}
             </div>
+          ) : (
+            <>
+              {authors.length > 0 ? (
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  variants={staggerContainer}
+                  className="flex flex-col gap-6"
+                >
+                  <AnimatePresence mode="popLayout">
+                    {authors.map((author) => (
+                      <motion.div
+                        key={author.id}
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                      >
+                        <AuthorHorizontalCard author={author} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              ) : (
+                <div className="py-20 flex flex-col items-center justify-center text-center border border-dashed border-border/50 bg-card/30">
+                  <h3 className="text-2xl font-serif font-bold mb-2">
+                    No authors found
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Try adjusting your search or expertise filters.
+                  </p>
+                  <Button
+                    variant="bordered"
+                    radius="full"
+                    className="mt-6 font-bold uppercase tracking-widest text-[10px] px-8 border-border hover:bg-foreground hover:text-background transition-all"
+                    onClick={() => setFilters({ search: "", category: "All" })}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </Container>
       </section>
@@ -160,11 +263,12 @@ export default function AuthorsListingPage() {
   );
 }
 
-// --- IMPROVED HORIZONTAL AUTHOR CARD ---
+// --- UPDATED HORIZONTAL AUTHOR CARD ---
 
 const AuthorHorizontalCard = ({ author }) => {
-  // Mapping some of your specific categories for the demo
-  const topCategories = ["Next.js", "SQL", "AWS", "AI Editor", "UI Design"];
+  // Use the first category as the "Primary Role", fallback to "Contributor"
+  const primaryCategory = author.categories?.[0]?.name || "Contributor";
+  const displayCategories = author.categories || [];
 
   return (
     <Card
@@ -172,20 +276,13 @@ const AuthorHorizontalCard = ({ author }) => {
       className="border border-border bg-card group hover:border-brand-blue/30 transition-all duration-300 rounded-none md:rounded-2xl"
     >
       <CardBody className="p-6 md:p-8 flex flex-col md:flex-row items-center md:items-stretch gap-8">
-
-        {/* Left: Avatar & Quick Info */}
+        {/* Left: Avatar */}
         <div className="flex flex-col items-center text-center shrink-0 w-32">
           <Avatar
-            src={author.image}
-            className="w-24 h-24 md:w-28 md:h-28 text-large ring-4 ring-background mb-4"
+            src={author.avatar_url}
+            name={author.name}
+            className="w-24 h-24 md:w-28 md:h-28 text-large font-bold bg-foreground text-background ring-4 ring-background mb-4"
           />
-          <Chip
-            size="sm"
-            variant="flat"
-            className="bg-brand-blue text-white font-bold text-[10px] uppercase tracking-wider"
-          >
-            {author.category}
-          </Chip>
         </div>
 
         {/* Center: Main Content */}
@@ -195,42 +292,37 @@ const AuthorHorizontalCard = ({ author }) => {
               {author.name}
             </h3>
             <p className="text-brand-blue text-xs font-bold uppercase tracking-widest mt-1">
-              {author.role}
-            </p>
-            <p className="text-muted-foreground text-xs flex items-center justify-center md:justify-start gap-1 mt-2">
-              <MapPin size={12} /> {author.location}
+              {primaryCategory} Specialist
             </p>
           </div>
 
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xl line-clamp-2 mb-4">
-            {author.bio}
+            {author.bio ||
+              "An insightful contributor to the Publisha collective, focusing on deep industry trends."}
           </p>
 
-          {/* NEW: Top Expertise Categories */}
+          {/* API Driven Expertise Categories */}
           <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-2">
-            {topCategories.map((cat) => (
+            {displayCategories.map((cat) => (
               <Chip
-                key={cat}
+                key={cat.id}
                 size="sm"
                 classNames={{
                   base: "border-border bg-background h-6",
-                  content: "text-[10px] font-bold uppercase tracking-tight text-muted-foreground",
-                  dot: "bg-brand-mint"
+                  content:
+                    "text-[10px] font-bold uppercase tracking-tight text-muted-foreground",
                 }}
               >
-                {cat}
+                {cat.name}
               </Chip>
             ))}
           </div>
 
-          {/* Stats for Tablet/Desktop */}
+          {/* Joined Date for Desktop */}
           <div className="hidden md:flex items-center gap-8 mt-4 pt-6 border-t border-border/50">
-            <StatItem icon={<BookOpen size={14} />} value={author.stats.articles} label="Articles" />
-            <StatItem icon={<Users size={14} />} value={author.stats.followers} label="Followers" />
-            <div className="flex flex-col">
-              <span className="text-foreground font-bold text-sm">{author.stats.views}</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Total Views</span>
-            </div>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+              Joined {dayjs(author.created_at).format("MMMM YYYY")}
+            </p>
           </div>
         </div>
 
@@ -238,30 +330,41 @@ const AuthorHorizontalCard = ({ author }) => {
         <div className="flex flex-col justify-center items-center md:items-end shrink-0 border-t md:border-t-0 md:border-l border-border/50 pt-6 md:pt-0 md:pl-8">
           <Button
             as={Link}
-            href="/authors/slug"
+            // ENCODE THE ID HERE
+            href={`/authors/${encodeId(author.id)}`}
             radius="full"
             className="bg-foreground text-background font-bold text-xs uppercase tracking-widest px-8 group-hover:bg-brand-blue transition-colors shadow-sm"
             endContent={<ArrowRight size={14} />}
           >
             Profile
           </Button>
-
-          {/* Mobile-only Stats Container */}
-          <div className="flex md:hidden gap-6 mt-6">
-            <StatItem icon={<BookOpen size={14} />} value={author.stats.articles} label="Articles" />
-            <StatItem icon={<Users size={14} />} value={author.stats.followers} label="Followers" />
-          </div>
         </div>
       </CardBody>
     </Card>
   );
 };
 
-const StatItem = ({ icon, value, label }) => (
-  <div className="flex flex-col">
-    <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
-      {icon} {value}
-    </div>
-    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
-  </div>
+// --- SKELETON ---
+const AuthorHorizontalSkeleton = () => (
+  <Card
+    shadow="none"
+    className="border border-border bg-card rounded-none md:rounded-2xl h-[240px]"
+  >
+    <CardBody className="p-8 flex flex-row items-stretch gap-8">
+      <Skeleton className="w-28 h-28 rounded-full shrink-0" />
+      <div className="flex-grow flex flex-col justify-center">
+        <Skeleton className="w-1/3 h-8 mb-2" />
+        <Skeleton className="w-1/4 h-3 mb-4" />
+        <Skeleton className="w-3/4 h-4 mb-2" />
+        <Skeleton className="w-1/2 h-4 mb-4" />
+        <div className="flex gap-2">
+          <Skeleton className="w-16 h-6 rounded-full" />
+          <Skeleton className="w-16 h-6 rounded-full" />
+        </div>
+      </div>
+      <div className="shrink-0 flex items-center pl-8 border-l border-border/50">
+        <Skeleton className="w-24 h-10 rounded-full" />
+      </div>
+    </CardBody>
+  </Card>
 );

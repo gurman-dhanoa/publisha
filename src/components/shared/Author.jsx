@@ -2,12 +2,13 @@
 import React from "react";
 import { Card, CardBody, Avatar, Skeleton, Button } from "@heroui/react";
 import Link from "next/link";
+import { encodeId } from "@/lib/hashids";
 
 export const AuthorCard = ({ author }) => {
   return (
     <Card 
       as={Link} 
-      href={`/authors/${author.id}`} 
+      href={`/authors/${encodeId(author.id)}`} 
       shadow="sm" 
       radius="none"
       className="bg-card border border-border h-full flex flex-col group hover:border-foreground/30 transition-all duration-300"

@@ -4,6 +4,7 @@ import AuthorService from "@/services/author.service";
 import { AuthorCard, AuthorSkeleton } from "@/components/shared/Author";
 import Container from "@/components/shared/Container";
 import { Button } from "@heroui/react";
+import Link from "next/link";
 
 export default function AuthorsSection() {
   const [authors, setAuthors] = useState([]);
@@ -27,23 +28,27 @@ export default function AuthorsSection() {
     <section className="py-24">
       <Container>
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-serif font-bold text-foreground mb-4">Our Brilliant Minds</h2>
-          <p className="text-muted-foreground text-lg">Meet the experts and storytellers shaping the conversation.</p>
+          <h2 className="text-4xl font-serif font-bold text-foreground mb-4">
+            Our Brilliant Minds
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Meet the experts and storytellers shaping the conversation.
+          </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {loading ? (
-            [1, 2, 3].map((i) => <AuthorSkeleton key={i} />)
-          ) : (
-            authors.map((author) => (
-              <AuthorCard key={author.id} author={author} />
-            ))
-          )}
+          {loading
+            ? [1, 2, 3].map((i) => <AuthorSkeleton key={i} />)
+            : authors.map((author) => (
+                <AuthorCard key={author.id} author={author} />
+              ))}
         </div>
-        
+
         <div className="mt-12 flex justify-center">
           <Button
-            variant="bordered" 
+            as={Link}
+            href="/authors"
+            variant="bordered"
             radius="none"
             className="border-foreground text-foreground font-bold text-xs uppercase tracking-widest px-10 hover:bg-foreground hover:text-background transition-all h-12"
           >

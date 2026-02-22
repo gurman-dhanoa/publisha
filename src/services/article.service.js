@@ -10,6 +10,10 @@ const ArticleService = {
     const response = await api.get(`/articles/slug/${slug}`);
     return response.data;
   },
+  getByAuthor: async (authorId, params = {}) => {
+    const response = await api.get(`/articles/author/${authorId}`, { params });
+    return response.data; // Expects { data: [...], pagination: {...} }
+  }
 };
 
 export default ArticleService;

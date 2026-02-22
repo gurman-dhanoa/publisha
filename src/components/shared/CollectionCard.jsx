@@ -2,7 +2,6 @@
 import React from "react";
 import { Card, Image, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
-import { Play } from "lucide-react"; // Using Play icon to mimic the playlist feel
 import Link from "next/link";
 
 export const CollectionCard = ({ collection }) => {
@@ -89,7 +88,7 @@ export const CollectionCard = ({ collection }) => {
               Curated by {collection.author_name}
             </p>
             <p className="text-[10px] text-brand-blue font-bold uppercase">
-              {collection.total_collection_views} Views
+              {Number(collection.total_collection_views || 0).toLocaleString()} Views
             </p>
           </div>
         </div>
