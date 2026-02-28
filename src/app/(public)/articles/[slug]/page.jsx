@@ -100,10 +100,11 @@ export default function ArticleDetailPage() {
 
                         <motion.div variants={fadeIn} className="mb-12">
                             <Image
+                                width={900}
+                                height={800}
                                 alt={article.title}
                                 src={article.image_url}
                                 className="w-full h-auto max-h-[600px] object-cover rounded-none"
-                                removeWrapper
                             />
                         </motion.div>
 
