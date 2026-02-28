@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
-import { Card, Image, Skeleton } from "@heroui/react";
+import { Card, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 export const CollectionCard = ({ collection }) => {
   const articles = collection.preview_articles || [];

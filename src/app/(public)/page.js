@@ -170,23 +170,3 @@ const StatBox = ({ icon, number, label }) => (
     </p>
   </div>
 );
-
-const CollectionCard = ({ title, count, image }) => (
-  <Link href={"/collection/slug"} className="group cursor-pointer">
-    <div className="w-full h-48 rounded-xl overflow-hidden mb-4 border border-border">
-      <Image
-        removeWrapper
-        alt={title}
-        src={image}
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-      />
-    </div>
-    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
-      <FolderHeart size={14} className="text-brand-blue" />
-      <span>{count} Articles</span>
-    </div>
-    <h3 className="text-xl font-serif font-bold text-foreground group-hover:text-brand-blue transition-colors">
-      {title}
-    </h3>
-  </Link>
-);

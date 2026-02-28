@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { Card, CardBody, Image, Skeleton } from "@heroui/react";
+import { Card, CardBody, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
 import { MessageCircle, Heart, Bookmark, Send } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 // --- VERTICAL CARD ---
 export const VerticalArticleCard = ({ article }) => {

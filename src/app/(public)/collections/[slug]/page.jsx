@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Avatar, Button, Image, Divider, Skeleton } from "@heroui/react";
+import { Avatar, Button, Divider, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
 import { ArrowLeft, FolderOpen, Clock, Share2, BookmarkPlus, BookOpen } from "lucide-react";
 import Link from "next/link";
 import dayjs from "dayjs";
+import Image from "next/image";
 
 import Container from "@/components/shared/Container";
 import { VerticalArticleCard, HorizontalArticleCard } from "@/components/shared/Article";

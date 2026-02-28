@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { Image, Avatar, Button } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
-import { Sparkles, PenTool, Globe, Users, ArrowRight } from "lucide-react";
+import { Sparkles, PenTool, Globe } from "lucide-react";
+import Image from "next/image";
 
 import Container from "@/components/shared/Container";
 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation"; // Added Link
-import { Avatar, Button, Image, Divider, Skeleton } from "@heroui/react";
+import { Avatar, Button, Divider, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
 import { Twitter, Instagram, Linkedin, TrendingUp, Layers } from "lucide-react";
 import Container from "@/components/shared/Container";
@@ -11,6 +11,7 @@ import ArticleService from "@/services/article.service";
 import CollectionService from "@/services/collection.service";
 import dayjs from "dayjs";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function ArticleDetailPage() {
     const { slug } = useParams();
