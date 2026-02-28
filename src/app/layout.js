@@ -31,14 +31,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <Head>
+      <head>
         <meta
           name="google-site-verification"
           content="L2F6IWJUva8NDaGVoGVhmqfVRLaMQjENKjioawy_JFE"
         />
-      </Head>
-      <body className={`${inter.variable} ${playfair.variable} antialiased`}>
-        <Script id="gtm-script" strategy="beforeInteractive">
+        <script id="gtm-script">
           {`
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -46,7 +44,9 @@ export default function RootLayout({ children }) {
             'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
             })(window,document,'script','dataLayer','GTM-5H7MN7DV');
           `}
-        </Script>
+        </script>
+      </head>
+      <body className={`${inter.variable} ${playfair.variable} antialiased`}>
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-5H7MN7DV"
