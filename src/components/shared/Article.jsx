@@ -81,8 +81,8 @@ export const HorizontalArticleCard = ({ article }) => {
         {/* Image Section */}
         <Link href={`/articles/${article.slug}`} className="w-full md:w-5/12 shrink-0">
           <Image
-            width={600}
-            height={400}
+            width={800}
+            height={600}
             alt={article.title}
             className="w-full h-full min-h-[300px] md:min-h-[400px] object-cover rounded-none"
             src={article.image_url || "https://via.placeholder.com/600x400?text=Publisha+Editorial"}
