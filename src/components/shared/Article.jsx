@@ -6,27 +6,42 @@ import { motion } from "framer-motion";
 import { MessageCircle, Heart, Bookmark, Send } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import LikeButton from "./LikeButton";
+import ShareButton from "./ShareButton";
 
 // --- VERTICAL CARD ---
 export const VerticalArticleCard = ({ article }) => {
   return (
     <motion.div whileHover={{ y: -4 }} className="w-full h-full max-w-[400px]">
-      <Card shadow="sm" radius="none" className="bg-card border border-border h-full flex flex-col">
+      <Card
+        shadow="sm"
+        radius="none"
+        className="bg-card border border-border h-full flex flex-col"
+      >
         <Link href={`/articles/${article.slug}`}>
           <Image
             width={600}
             height={400}
             alt={article.title}
             className="w-full h-[240px] object-cover rounded-none"
-            src={article.image_url || "https://via.placeholder.com/400x240?text=No+Image"}
+            src={
+              article.image_url ||
+              "https://via.placeholder.com/400x240?text=No+Image"
+            }
           />
         </Link>
         <CardBody className="p-6 flex flex-col gap-4 flex-grow">
-          <Link href={`/authors/${article.author_id}`} className="text-sm text-muted-foreground font-medium">
+          <Link
+            href={`/authors/${article.author_id}`}
+            className="text-sm text-muted-foreground font-medium"
+          >
             {article.author_name}
           </Link>
 
-          <Link href={`/articles/${article.slug}`} className="flex flex-col gap-3 flex-grow">
+          <Link
+            href={`/articles/${article.slug}`}
+            className="flex flex-col gap-3 flex-grow"
+          >
             <h3 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase leading-snug line-clamp-2">
               {article.title}
             </h3>
@@ -38,7 +53,12 @@ export const VerticalArticleCard = ({ article }) => {
           {/* Categories mapped from API */}
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-2 font-medium">
             {article.categories?.map((cat) => (
-              <span key={cat.id} className="hover:text-brand-blue cursor-pointer">#{cat.slug}</span>
+              <span
+                key={cat.id}
+                className="hover:text-brand-blue cursor-pointer"
+              >
+                #{cat.slug}
+              </span>
             ))}
           </div>
 
@@ -48,13 +68,20 @@ export const VerticalArticleCard = ({ article }) => {
               <MessageCircle strokeWidth={1.5} size={20} />
               <span className="text-sm">{article.views_count || 0}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Heart strokeWidth={1.5} size={20} />
-              <span className="text-sm">{article.likes_count || 0}</span>
-            </div>
+            <LikeButton
+              articleId={article.id}
+              initialCount={article.likes_count}
+              initialLiked={article.is_liked}
+            />
             <div className="flex-grow" />
             <Bookmark strokeWidth={1.5} size={20} className="cursor-pointer" />
-            <Send strokeWidth={1.5} size={20} className="cursor-pointer" />
+            <ShareButton
+              title={article.title}
+              summary={article.summary}
+              slug={article.slug}
+              image={article.image_url}
+              size={20}
+            />
           </div>
         </CardBody>
       </Card>
@@ -79,31 +106,40 @@ export const HorizontalArticleCard = ({ article }) => {
         className="flex flex-col md:flex-row bg-card border border-border overflow-hidden"
       >
         {/* Image Section */}
-        <Link href={`/articles/${article.slug}`} className="w-full md:w-5/12 shrink-0">
+        <Link
+          href={`/articles/${article.slug}`}
+          className="w-full md:w-5/12 shrink-0"
+        >
           <Image
             width={800}
             height={600}
             alt={article.title}
             className="w-full h-full min-h-[300px] md:min-h-[400px] object-cover rounded-none"
-            src={article.image_url || "https://via.placeholder.com/600x400?text=Publisha+Editorial"}
+            src={
+              article.image_url ||
+              "https://via.placeholder.com/600x400?text=Publisha+Editorial"
+            }
           />
         </Link>
 
         {/* Content Section */}
         <CardBody className="w-full p-8 md:p-12 flex flex-col justify-between gap-6">
           <div className="flex flex-col gap-6">
-            <Link href={`/articles/${article.slug}`} className="flex flex-col gap-4">
+            <Link
+              href={`/articles/${article.slug}`}
+              className="flex flex-col gap-4"
+            >
               {/* Badge for the first category */}
               {article.categories?.[0] && (
                 <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-brand-blue">
                   {article.categories[0].name}
                 </span>
               )}
-              
+
               <h3 className="text-2xl md:text-3xl font-serif font-bold text-foreground tracking-wide uppercase leading-tight">
                 {article.title}
               </h3>
-              
+
               <p className="text-base text-muted-foreground leading-relaxed line-clamp-3">
                 {article.summary}
               </p>
@@ -113,13 +149,16 @@ export const HorizontalArticleCard = ({ article }) => {
             <div className="flex justify-between items-center py-4 border-y border-border/50">
               <div className="flex gap-3 text-muted-foreground text-[10px] uppercase tracking-widest font-bold">
                 {article.categories?.map((cat) => (
-                  <span key={cat.id} className="hover:text-foreground cursor-pointer transition-colors">
+                  <span
+                    key={cat.id}
+                    className="hover:text-foreground cursor-pointer transition-colors"
+                  >
                     #{cat.slug}
                   </span>
                 ))}
               </div>
-              <Link 
-                href={`/authors/${article.author_id}`} 
+              <Link
+                href={`/authors/${article.author_id}`}
                 className="text-xs font-bold uppercase tracking-widest hover:text-brand-blue transition-colors"
               >
                 By {article.author_name}
@@ -130,14 +169,21 @@ export const HorizontalArticleCard = ({ article }) => {
           {/* Footer Actions */}
           <div className="flex items-center gap-8 text-muted-foreground">
             <div className="flex items-center gap-2 group cursor-default">
-              <MessageCircle strokeWidth={1.5} size={22} className="group-hover:text-foreground transition-colors" />
-              <span className="text-sm font-medium">{article.views_count || 0}</span>
+              <MessageCircle
+                strokeWidth={1.5}
+                size={22}
+                className="group-hover:text-foreground transition-colors"
+              />
+              <span className="text-sm font-medium">
+                {article.views_count || 0}
+              </span>
             </div>
-            
-            <button className="flex items-center gap-2 group hover:text-danger transition-colors">
-              <Heart strokeWidth={1.5} size={22} className="group-hover:fill-danger/10" />
-              <span className="text-sm font-medium">{article.likes_count || 0}</span>
-            </button>
+
+            <LikeButton
+              articleId={article.id}
+              initialCount={article.likes_count}
+              initialLiked={article.is_liked}
+            />
 
             <div className="flex-grow" />
 
@@ -145,9 +191,13 @@ export const HorizontalArticleCard = ({ article }) => {
               <button className="hover:text-foreground transition-all active:scale-90">
                 <Bookmark strokeWidth={1.5} size={22} />
               </button>
-              <button className="hover:text-foreground transition-all active:scale-90">
-                <Send strokeWidth={1.5} size={22} />
-              </button>
+              <ShareButton
+                title={article.title}
+                summary={article.summary}
+                slug={article.slug}
+                image={article.image_url}
+                size={20}
+              />
             </div>
           </div>
         </CardBody>
@@ -158,7 +208,11 @@ export const HorizontalArticleCard = ({ article }) => {
 
 export const HorizontalCardSkeleton = () => {
   return (
-    <Card shadow="sm" radius="none" className="w-full flex flex-col md:flex-row bg-card border border-border overflow-hidden">
+    <Card
+      shadow="sm"
+      radius="none"
+      className="w-full flex flex-col md:flex-row bg-card border border-border overflow-hidden"
+    >
       {/* Image Section */}
       <Skeleton className="w-full md:w-5/12 h-[300px] md:min-h-[400px] rounded-none" />
 
@@ -168,11 +222,11 @@ export const HorizontalCardSkeleton = () => {
           <div className="flex flex-col gap-4">
             {/* Category Badge */}
             <Skeleton className="w-24 h-3 rounded-full" />
-            
+
             {/* Massive Title lines */}
             <Skeleton className="w-full h-10 rounded-md" />
             <Skeleton className="w-3/4 h-10 rounded-md" />
-            
+
             {/* Summary lines */}
             <div className="space-y-3 mt-2">
               <Skeleton className="w-full h-4 rounded-full" />
@@ -208,14 +262,18 @@ export const HorizontalCardSkeleton = () => {
 
 export const VerticalCardSkeleton = () => {
   return (
-    <Card shadow="sm" radius="none" className="w-full max-w-[400px] bg-card border border-border h-full flex flex-col">
+    <Card
+      shadow="sm"
+      radius="none"
+      className="w-full max-w-[400px] bg-card border border-border h-full flex flex-col"
+    >
       {/* Image Skeleton */}
       <Skeleton className="w-full h-[240px] rounded-none" />
-      
+
       <CardBody className="p-6 flex flex-col gap-4 flex-grow">
         {/* Author line */}
         <Skeleton className="w-1/3 h-3 rounded-full" />
-        
+
         {/* Title and Summary lines */}
         <div className="flex flex-col gap-3 flex-grow">
           <Skeleton className="w-full h-6 rounded-md" />

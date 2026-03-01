@@ -1,8 +1,10 @@
+// components/sections/TrendingSection.jsx
 "use client";
 import React, { useEffect, useState } from "react";
-import { Button, Skeleton } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
 import ArticleService from "@/services/article.service";
+import { useAuth } from "@/hooks/useAuth"; // Import your hook
 import {
   HorizontalArticleCard,
   HorizontalCardSkeleton,
@@ -15,10 +17,14 @@ import Link from "next/link";
 export default function TrendingSection() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const loadTrending = async () => {
+      if (articles.length === 0) setLoading(true);
       try {
+        setLoading(true);
         const data = await ArticleService.getArticles({
           sort: "trending",
           limit: 7,
@@ -28,15 +34,17 @@ export default function TrendingSection() {
         console.error("Error loading trending articles", err);
       } finally {
         setLoading(false);
+        setIsInitialLoad(false);
       }
     };
+
     loadTrending();
-  }, []);
+  }, [isAuthenticated]);
+
+  if (loading && isInitialLoad) return <TrendingSkeleton />;
 
   const featuredArticle = articles[0];
   const gridArticles = articles.slice(1);
-
-  if (loading) return <TrendingSkeleton />;
 
   return (
     <section className="py-16">
