@@ -1,10 +1,12 @@
-import PublishPage from '@/components/forms/ArticleForm'
-import React from 'react'
+import PublishPage from "@/components/forms/ArticleForm";
+import React, { Suspense } from "react";
 
 const page = () => {
   return (
-    <PublishPage />
-  )
-}
+    <Suspense>
+      <PublishPage />
+    </Suspense>
+  );
+};
 
-export default page
+export default page;
