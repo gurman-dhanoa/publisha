@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { 
   Input, 
   Avatar, 
@@ -21,7 +22,12 @@ import ArticleService from "@/services/article.service";
 import CategoryService from "@/services/category.service";
 import AuthorService from "@/services/author.service";
 
-export default function ArticlesListingPage() {
+// We extract the main logic into a sub-component so we can wrap it in Suspense
+function ArticlesListingContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   // --- UI States ---
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
@@ -33,12 +39,29 @@ export default function ArticlesListingPage() {
   const [authors, setAuthors] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Initialize state from URL params
   const [filters, setFilters] = useState({
-    search: "",
-    category: "All",
-    author: "All",
-    sort: "latest"
+    search: searchParams.get("search") || "",
+    category: searchParams.get("category") || "All",
+    author: searchParams.get("author") || "All",
+    sort: searchParams.get("sort") || "latest"
   });
+
+  // Sync state changes back to the URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (filters.search) params.set("search", filters.search);
+    if (filters.category !== "All") params.set("category", filters.category);
+    if (filters.author !== "All") params.set("author", filters.author);
+    if (filters.sort !== "latest") params.set("sort", filters.sort);
+
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    
+    // Use replace instead of push so we don't fill up the user's browser history
+    router.replace(newUrl, { scroll: false });
+  }, [filters, pathname, router]);
 
   // 1. Fetch Metadata (Categories & Authors)
   useEffect(() => {
@@ -84,10 +107,14 @@ export default function ArticlesListingPage() {
     []
   );
 
+  // useEffect(() => {
+  //   debouncedFetch(filters);
+  //   return debouncedFetch.cancel;
+  // }, [filters, debouncedFetch]);
+
   useEffect(() => {
-    debouncedFetch(filters);
-    return debouncedFetch.cancel;
-  }, [filters, debouncedFetch]);
+    fetchArticles(filters);
+  }, [filters]);
 
   // --- Handlers ---
   const updateFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
@@ -113,11 +140,10 @@ export default function ArticlesListingPage() {
   };
 
   // Derived state to keep the layout clean
-  const isDefaultView = filters.category === "All" && filters.author === "All" && !filters.search;
+  const isDefaultView = filters.category === "All" && filters.author === "All" && !filters.search && filters.sort === "latest";
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans pb-24">
-      
       {/* ========================================================== */}
       {/* 1. EDITORIAL HEADER & EXPANDING SEARCH                     */}
       {/* ========================================================== */}
@@ -309,7 +335,7 @@ export default function ArticlesListingPage() {
                     initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
                     className="flex flex-col gap-16"
                   >
-                    {/* Hero Article (Only shows if no specific filters are applied) */}
+                    {/* Hero Article */}
                     {isDefaultView && articles[0] && (
                        <motion.div variants={fadeUp}>
                           <HorizontalArticleCard article={articles[0]} />
@@ -352,5 +378,18 @@ export default function ArticlesListingPage() {
       </section>
 
     </div>
+  );
+}
+
+// Export the component wrapped in a Suspense boundary
+export default function ArticlesListingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse font-serif text-xl">Loading Journal...</div>
+      </div>
+    }>
+      <ArticlesListingContent />
+    </Suspense>
   );
 }

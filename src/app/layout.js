@@ -7,8 +7,6 @@ import AuthInitializer from "@/components/shared/AuthInitializer";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
-import Head from "next/head";
-import Script from "next/script";
 
 // Configure the Sans-Serif font (Body/UI)
 const inter = Inter({

@@ -7,11 +7,12 @@ import { Search, Feather, TrendingUp } from "lucide-react";
 import CategoryService from "@/services/category.service";
 import Container from "@/components/shared/Container";
 import GlobalSearchModal from "@/components/shared/GlobalSearch";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
@@ -27,6 +28,10 @@ export default function HeroSection() {
     };
     fetchCategories();
   }, []);
+
+  const handleCategoryClick = (slug) => {
+    router.push(`/articles?category=${slug}`)
+  }
 
   return (
     <section className="relative pt-32 pb-24 overflow-hidden">
@@ -55,7 +60,7 @@ export default function HeroSection() {
             className="w-full h-12 sm:h-16 relative rounded-full bg-card border-2 border-border hover:border-foreground transition-all group shadow-sm flex items-center px-4 sm:px-6 cursor-text"
           >
              <Search className="text-muted-foreground group-hover:text-foreground transition-colors" size={24} />
-             <span className="text-lg text-muted-foreground ml-3 sm:ml-4 font-serif line-clamp-1">
+             <span className="text-lg text-muted-foreground ml-3 sm:ml-4 line-clamp-1">
                Search by author, article, or topic
              </span>
              {/* <div className="absolute right-2 bg-foreground text-background px-6 py-2.5 rounded-full font-medium text-sm">
@@ -75,14 +80,13 @@ export default function HeroSection() {
               ))
             ) : (
               categories.slice(0,8).map((cat) => (
-                <Chip
+                <button
                   key={cat.id} 
-                  size="md"
-                  className="border-border text-muted-foreground hover:border-foreground hover:text-foreground transition-colors bg-card/50 backdrop-blur-sm"
-                  onClick={() => window.location.href = `/articles?category=${cat.slug}`}
+                  className="cursor-pointer px-4 py-1.5 rounded-full border border-border text-muted-foreground hover:border-foreground hover:text-foreground transition-colors bg-card/50 backdrop-blur-sm"
+                  onClick={() => handleCategoryClick(cat.slug)}
                 >
                   {cat.name}
-                </Chip>
+                </button>
               ))
             )}
           </div>

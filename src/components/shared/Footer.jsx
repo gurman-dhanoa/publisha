@@ -87,9 +87,9 @@ const Footer = () => {
                 <div className="flex flex-col md:flex-row items-center justify-between text-[10px] font-bold tracking-widest uppercase text-muted-foreground gap-4 text-center md:text-left">
                     <p>© {new Date().getFullYear()} Publisha. All rights reserved.</p>
                     <div className="flex items-center gap-1">
-                        <span>Designed with</span>
-                        <span className="text-danger">♥</span>
-                        <span>in Punjab</span>
+                        <span>Designed by</span>
+                        {/* <span className="text-danger">♥</span> */}
+                        <span>Gurman Singh</span>
                     </div>
                 </div>
 
