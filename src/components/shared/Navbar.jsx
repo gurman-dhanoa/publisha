@@ -120,9 +120,9 @@ const Navbar = () => {
                         <DropdownItem key="dashboard" as={Link} href="/dashboard">
                           My Dashboard
                         </DropdownItem>
-                        <DropdownItem key="settings" as={Link} href="/dashboard/settings">
+                        {/* <DropdownItem key="settings" as={Link} href="/dashboard/settings">
                           Settings
-                        </DropdownItem>
+                        </DropdownItem> */}
                         <DropdownItem key="logout" color="danger" className="text-danger mt-2 border-t border-border/50 pt-2" onPress={logoutUser}>
                           Log Out
                         </DropdownItem>

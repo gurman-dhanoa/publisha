@@ -99,7 +99,7 @@ export default function CollectionDetailPage() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full lg:w-1/2">
-               <Image removeWrapper alt={collection.name} src={firstArticle?.image_url} className="w-full aspect-[4/3] object-cover border border-border" />
+               <Image height={800} width={900} alt={collection.name} src={firstArticle?.image_url} className="w-full aspect-[4/3] object-cover border border-border" />
             </motion.div>
           </div>
         </Container>

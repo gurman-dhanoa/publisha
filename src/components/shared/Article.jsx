@@ -3,11 +3,12 @@
 import React from "react";
 import { Card, CardBody, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
-import { MessageCircle, Heart, Bookmark, Send } from "lucide-react";
+import { MessageCircle, Heart, Bookmark, Send, Eye } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import LikeButton from "./LikeButton";
 import ShareButton from "./ShareButton";
+import { encodeId } from "@/lib/hashids";
 
 // --- VERTICAL CARD ---
 export const VerticalArticleCard = ({ article }) => {
@@ -32,7 +33,7 @@ export const VerticalArticleCard = ({ article }) => {
         </Link>
         <CardBody className="p-6 flex flex-col gap-4 flex-grow">
           <Link
-            href={`/authors/${article.author_id}`}
+            href={`/authors/${encodeId(article.author_id)}`}
             className="text-sm text-muted-foreground font-medium"
           >
             {article.author_name}
@@ -65,7 +66,7 @@ export const VerticalArticleCard = ({ article }) => {
           {/* Actions - Using real API counts */}
           <div className="flex items-center gap-6 mt-4 text-muted-foreground">
             <div className="flex items-center gap-2">
-              <MessageCircle strokeWidth={1.5} size={20} />
+              <Eye strokeWidth={1.5} size={20} />
               <span className="text-sm">{article.views_count || 0}</span>
             </div>
             <LikeButton
@@ -158,7 +159,7 @@ export const HorizontalArticleCard = ({ article }) => {
                 ))}
               </div>
               <Link
-                href={`/authors/${article.author_id}`}
+                href={`/authors/${encodeId(article.author_id)}`}
                 className="text-xs font-bold uppercase tracking-widest hover:text-brand-blue transition-colors"
               >
                 By {article.author_name}
@@ -169,7 +170,7 @@ export const HorizontalArticleCard = ({ article }) => {
           {/* Footer Actions */}
           <div className="flex items-center gap-8 text-muted-foreground">
             <div className="flex items-center gap-2 group cursor-default">
-              <MessageCircle
+              <Eye
                 strokeWidth={1.5}
                 size={22}
                 className="group-hover:text-foreground transition-colors"

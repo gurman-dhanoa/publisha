@@ -16,6 +16,14 @@ const AuthorService = {
   getStats: async (id) => {
     const response = await api.get(`/authors/${id}/stats`);
     return response.data;
+  },
+  getMe: async () => {
+    const response = await api.get('/authors/profile/me');
+    return response.data;
+  },
+  updateProfile: async (id, data) => {
+    const response = await api.put(`/authors/${id}`, data);
+    return response.data;
   }
 };
 
