@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Skeleton } from "@heroui/react";
+import { Chip, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
 import { Search, Feather, TrendingUp } from "lucide-react";
 import CategoryService from "@/services/category.service";
@@ -52,15 +52,15 @@ export default function HeroSection() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setIsSearchOpen(true)}
-            className="w-full h-16 relative rounded-full bg-card border-2 border-border hover:border-foreground transition-all group shadow-sm flex items-center px-6 cursor-text"
+            className="w-full h-12 sm:h-16 relative rounded-full bg-card border-2 border-border hover:border-foreground transition-all group shadow-sm flex items-center px-4 sm:px-6 cursor-text"
           >
              <Search className="text-muted-foreground group-hover:text-foreground transition-colors" size={24} />
-             <span className="text-lg text-muted-foreground ml-4 font-serif">
-               Search by author, article, or topic...
+             <span className="text-lg text-muted-foreground ml-3 sm:ml-4 font-serif line-clamp-1">
+               Search by author, article, or topic
              </span>
-             <div className="absolute right-2 bg-foreground text-background px-6 py-2.5 rounded-full font-medium text-sm">
+             {/* <div className="absolute right-2 bg-foreground text-background px-6 py-2.5 rounded-full font-medium text-sm">
                Search
-             </div>
+             </div> */}
           </motion.div>
 
           {/* Trending Searches */}
@@ -70,18 +70,19 @@ export default function HeroSection() {
             </span>
             
             {isLoading ? (
-              [...Array(4)].map((_,idx) => (
+              [...Array(8)].map((_,idx) => (
                 <Skeleton key={idx} className="w-24 h-8 rounded-full bg-default-200" />
               ))
             ) : (
-              categories.map((cat) => (
-                <button 
+              categories.slice(0,8).map((cat) => (
+                <Chip
                   key={cat.id} 
-                  className="px-4 py-1.5 rounded-full border border-border text-muted-foreground hover:border-foreground hover:text-foreground transition-colors bg-card/50 backdrop-blur-sm"
+                  size="md"
+                  className="border-border text-muted-foreground hover:border-foreground hover:text-foreground transition-colors bg-card/50 backdrop-blur-sm"
                   onClick={() => window.location.href = `/articles?category=${cat.slug}`}
                 >
                   {cat.name}
-                </button>
+                </Chip>
               ))
             )}
           </div>

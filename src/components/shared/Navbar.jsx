@@ -61,7 +61,7 @@ const Navbar = () => {
           
           {/* LOGO */}
           <Link href="/" className="flex items-center gap-2 cursor-pointer shrink-0">
-            <HeartHandshake size={28} className="text-brand-blue" strokeWidth={1.5} />
+            {/* <HeartHandshake size={28} className="text-brand-blue" strokeWidth={1.5} /> */}
             <span className="text-xl sm:text-2xl font-sans font-black tracking-wide text-foreground uppercase mt-1">
               Publisha
             </span>

@@ -75,7 +75,7 @@ export const VerticalArticleCard = ({ article }) => {
               initialLiked={article.is_liked}
             />
             <div className="flex-grow" />
-            <Bookmark strokeWidth={1.5} size={20} className="cursor-pointer" />
+            {/* <Bookmark strokeWidth={1.5} size={20} className="cursor-pointer" /> */}
             <ShareButton
               title={article.title}
               summary={article.summary}
@@ -189,9 +189,9 @@ export const HorizontalArticleCard = ({ article }) => {
             <div className="flex-grow" />
 
             <div className="flex items-center gap-4">
-              <button className="hover:text-foreground transition-all active:scale-90">
+              {/* <button className="hover:text-foreground transition-all active:scale-90">
                 <Bookmark strokeWidth={1.5} size={22} />
-              </button>
+              </button> */}
               <ShareButton
                 title={article.title}
                 summary={article.summary}
