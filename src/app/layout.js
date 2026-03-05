@@ -24,6 +24,12 @@ export const metadata = {
   title: "Publisha | Write. Enhance. Publish.",
   description:
     "A distraction-free platform powered by next-gen AI. From first draft to final polish, create impactful content and build your following in the AI age.",
+  manifest: '/manifest.json',
+  icons: {
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({ children }) {
