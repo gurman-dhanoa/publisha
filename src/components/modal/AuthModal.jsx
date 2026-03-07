@@ -9,7 +9,8 @@ import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import Cookies from "js-cookie";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase";
 import AuthService from "@/services/auth.service";
 import { setCredentials } from "@/store/slices/authSlice";
 import { AuthConstants } from "@/constants/auth.constants";
@@ -91,10 +92,15 @@ export default function AuthModal({ mode = "button", buttonText = "Join", classN
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
-      const data = await signInWithGoogle();
-      handleSuccessfulLogin(data);
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      const response = await AuthService.loginWithGoogle({ 
+        firebaseToken: idToken
+      });
+      handleSuccessfulLogin(response?.data);
     } catch (error) {
       toast.error("Google sign-in failed.");
+      console.log(error);
     } finally {
       setIsGoogleLoading(false);
     }

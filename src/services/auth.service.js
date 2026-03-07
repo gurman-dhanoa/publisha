@@ -12,6 +12,10 @@ const AuthService = {
   verifyOTP: async (data) => {
     return await api.post('/authors/verify-otp', data);
   },
+
+  loginWithGoogle: async (data) => {
+    return await api.post('/authors/google-auth', data);
+  },
 };
 
 export default AuthService;
