@@ -29,7 +29,8 @@ export default function TrendingSection() {
           sort: "trending",
           limit: 7,
         });
-        setArticles(data);
+        console.log(data)
+        setArticles(data?.articles || []);
       } catch (err) {
         console.error("Error loading trending articles", err);
       } finally {

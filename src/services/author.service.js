@@ -1,12 +1,12 @@
-import api from '@/lib/axios';
+import api from "@/lib/axios";
 
 const AuthorService = {
   getTrending: async (limit = 3) => {
-    const response = await api.get('/authors/trending', { params: { limit } });
+    const response = await api.get("/authors/trending", { params: { limit } });
     return response.data; // Array of author objects
   },
   getAll: async () => {
-    const response = await api.get('/authors');
+    const response = await api.get("/authors");
     return response.data; // Array of author objects
   },
   getById: async (id) => {
@@ -18,13 +18,21 @@ const AuthorService = {
     return response.data;
   },
   getMe: async () => {
-    const response = await api.get('/authors/profile/me');
+    const response = await api.get("/authors/profile/me");
     return response.data;
   },
   updateProfile: async (id, data) => {
     const response = await api.put(`/authors/${id}`, data);
     return response.data;
-  }
+  },
+  getArticles: async (id, params) => {
+    const response = await api.get(`/authors/${id}/articles`, { params });
+    return response.data;
+  },
+  getCollections: async (id, params) => {
+    const response = await api.get(`/authors/${id}/collections`, { params });
+    return response.data;
+  },
 };
 
 export default AuthorService;

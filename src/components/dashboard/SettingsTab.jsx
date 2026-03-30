@@ -48,7 +48,7 @@ export default function SettingsTab({ profile }) {
     const loadCategories = async () => {
       try {
         const data = await CategoryService.getAll();
-        setCategories(data || []);
+        setCategories(data.categories || []);
       } catch (err) {
         console.error("Failed to load categories", err);
       }

@@ -117,7 +117,7 @@ const Navbar = () => {
                           <p className="text-[10px] uppercase font-bold text-muted-foreground">Signed in as</p>
                           <p className="font-bold text-sm truncate">{user?.email}</p>
                         </DropdownItem>
-                        <DropdownItem key="dashboard" as={Link} href="/dashboard">
+                        <DropdownItem key="dashboard" as={Link} href="/portal/dashboard">
                           My Dashboard
                         </DropdownItem>
                         {/* <DropdownItem key="settings" as={Link} href="/dashboard/settings">
