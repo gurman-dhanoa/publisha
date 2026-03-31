@@ -12,7 +12,7 @@ const ArticleService = {
   },
   getByAuthor: async (authorId, params = {}) => {
     const response = await api.get(`/articles/author/${authorId}`, { params });
-    return response.data; // Expects { data: [...], pagination: {...} }
+    return response.data;
   },
 
   create: async (formData) => {

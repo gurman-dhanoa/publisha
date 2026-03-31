@@ -5,12 +5,16 @@ const AuthService = {
     return await api.get('/authors/profile/me'); 
   },
 
-  login: async (credentials) => {
-    return await api.post('/authors/login', credentials);
+  sendOTP: async (data) => {
+    return await api.post('/authors/request-otp', data);
+  },
+  
+  verifyOTP: async (data) => {
+    return await api.post('/authors/verify-otp', data);
   },
 
-  register: async (userData) => {
-    return await api.post('/authors/register', userData);
+  loginWithGoogle: async (data) => {
+    return await api.post('/authors/google-auth', data);
   },
 };
 
