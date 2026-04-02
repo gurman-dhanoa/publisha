@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Container from "@/components/shared/Container";
-import { VerticalArticleCard, VerticalCardSkeleton } from "@/components/shared/Article";
+import {
+  VerticalArticleCard,
+  VerticalCardSkeleton,
+} from "@/components/shared/Article";
 import ArticleService from "@/services/article.service";
 
 export default function RelatedArticles({ currentArticleId }) {
@@ -14,10 +17,15 @@ export default function RelatedArticles({ currentArticleId }) {
     const fetchRelated = async () => {
       try {
         // Fetching trending articles as a placeholder for related content
-        const data = await ArticleService.getArticles({ sort: "trending", limit: 4 });
-        
+        const { articles } = await ArticleService.getArticles({
+          sort: "trending",
+          limit: 4,
+        });
+
         // Filter out the current article if its ID is provided
-        const filtered = data.filter(art => art.id !== currentArticleId).slice(0, 3);
+        const filtered = articles ? articles
+          .filter((art) => art.id !== currentArticleId)
+          .slice(0, 3) : [];
         setArticles(filtered);
       } catch (error) {
         console.error("Failed to fetch related articles", error);
@@ -39,7 +47,11 @@ export default function RelatedArticles({ currentArticleId }) {
 
   const cardVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
   };
 
   return (
@@ -61,20 +73,24 @@ export default function RelatedArticles({ currentArticleId }) {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {loading ? (
-            // Show Skeletons while loading
-            [...Array(3)].map((_, i) => <VerticalCardSkeleton key={i} />)
-          ) : (
-            articles.map((article) => (
-              <motion.div key={article.id} variants={cardVariants} className="w-full">
-                <VerticalArticleCard article={article} />
-              </motion.div>
-            ))
-          )}
+          {loading
+            ? // Show Skeletons while loading
+              [...Array(3)].map((_, i) => <VerticalCardSkeleton key={i} />)
+            : articles.map((article) => (
+                <motion.div
+                  key={article.id}
+                  variants={cardVariants}
+                  className="w-full"
+                >
+                  <VerticalArticleCard article={article} />
+                </motion.div>
+              ))}
         </motion.div>
 
         {!loading && articles.length === 0 && (
-          <p className="text-center text-muted-foreground">No related articles found.</p>
+          <p className="text-center text-muted-foreground">
+            No related articles found.
+          </p>
         )}
       </Container>
     </section>

@@ -41,7 +41,7 @@ export default function ArticleDetailPage() {
           ArticleService.getArticles({ sort: "trending", limit: 5 }),
           CollectionService.getPopular(5),
         ]);
-        setTrendingArticles(articles);
+        setTrendingArticles(articles.articles || []);
         setTrendingCollections(collections);
       } catch (error) {
         console.error("Sidebar data fetch failed", error);

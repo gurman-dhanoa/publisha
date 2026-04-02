@@ -71,8 +71,8 @@ function ArticlesListingContent() {
           CategoryService.getAll(),
           AuthorService.getAll()
         ]);
-        setCategories(cats);
-        setAuthors(auths);
+        setCategories(cats.categories || []);
+        setAuthors(auths.authors || []);
       } catch (err) {
         console.error("Metadata fetch error:", err);
       }
@@ -93,7 +93,7 @@ function ArticlesListingContent() {
       };
       
       const res = await ArticleService.getArticles(params);
-      setArticles(res);
+      setArticles(res.articles || []);
     } catch (err) {
       console.error("Articles fetch error:", err);
     } finally {

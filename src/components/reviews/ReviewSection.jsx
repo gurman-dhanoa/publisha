@@ -31,7 +31,7 @@ export default function ReviewSection({ articleId, articleAuthorId }) {
     try {
       const res = await ReviewService.getByArticle(articleId);
       console.log("response of review  api", res);
-      setReviews(res.data);
+      setReviews(res.data.reviews || []);
       setSummary(res.summary);
       setUserReview(res.user_review);
     } catch (error) {
