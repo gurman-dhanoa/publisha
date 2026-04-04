@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardBody, Spinner } from "@heroui/react";
 import { useAuth } from "@/hooks/useAuth";
 import AuthorService from "@/services/author.service";
+import { formatCompactNumber } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -25,9 +26,10 @@ export default function DashboardPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
         <h3 className="text-2xl font-serif font-bold mb-6">At a Glance</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard label="Total Articles" value={stats?.total_articles || 0} />
           <StatCard label="Published" value={stats?.published_articles || 0} />
+          <StatCard label="Total Views" value={formatCompactNumber(stats?.total_views || 0)} />
           <StatCard label="Total Likes" value={stats?.total_likes || 0} />
           <StatCard label="Avg Rating" value={stats?.avg_rating || "N/A"} />
         </div>
