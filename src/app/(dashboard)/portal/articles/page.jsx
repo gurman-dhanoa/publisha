@@ -7,7 +7,6 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import { useAuth } from "@/hooks/useAuth";
 import AuthorService from "@/services/author.service";
-import useDebounce from "@/hooks/useDebounce"; // Assuming you have a debounce hook, or just handle it directly
 
 export default function ArticlesPage() {
   const { user } = useAuth();
@@ -118,13 +117,13 @@ export default function ArticlesPage() {
         </Table>
 
         {/* PAGINATION INTEGRATION */}
-        {!loading && paginationInfo.pages > 1 && (
-          <div className="flex justify-center p-4 border-t border-border">
+        {!loading && (
+          <div className="flex justify-end p-4 border-t border-border">
             <Pagination 
               total={paginationInfo.pages} 
               page={page} 
               onChange={setPage} 
-              color="primary"
+              color="brand"
               size="sm"
             />
           </div>
