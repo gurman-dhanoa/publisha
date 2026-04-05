@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Avatar, Card, CardBody, Chip, Skeleton } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, ArrowRight, Eye, Heart, FileText } from "lucide-react";
+import { Search, Filter, ArrowRight, Eye, Heart, FileText, ArrowUp } from "lucide-react";
 import debounce from "lodash/debounce";
 import Link from "next/link";
 import dayjs from "dayjs";
@@ -12,21 +12,24 @@ import Container from "@/components/shared/Container";
 import AuthorService from "@/services/author.service";
 import CategoryService from "@/services/category.service";
 import { formatCompactNumber } from "@/lib/utils";
+
 export default function AuthorsListingPage() {
   // --- UI States ---
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const searchInputRef = useRef(null);
+  const observerTarget = useRef(null); // Ref for IntersectionObserver
 
   // --- Filter & Data States ---
   const [authors, setAuthors] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [filters, setFilters] = useState({ search: "", category: "All" });
+  
+  // --- Pagination & Loading States ---
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
-
-  const [filters, setFilters] = useState({
-    search: "",
-    category: "All",
-  });
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // 1. Fetch Metadata (Categories)
   useEffect(() => {
@@ -42,41 +45,82 @@ export default function AuthorsListingPage() {
   }, []);
 
   // 2. Fetch Authors Logic
-  const fetchAuthors = async (currentFilters) => {
+  const fetchAuthors = async (currentFilters, currentPage) => {
     try {
-      setLoading(true);
-      // Constructing params based on what AuthorService accepts
+      if (currentPage === 1) setLoading(true);
+      else setLoadingMore(true);
+
       const params = {
-        categoryId:
-          currentFilters.category === "All"
-            ? undefined
-            : currentFilters.category,
+        categoryId: currentFilters.category === "All" ? undefined : currentFilters.category,
         search: currentFilters.search || undefined,
+        page: currentPage,
+        limit: 6,
       };
 
       const res = await AuthorService.getAll(params);
-      setAuthors(res.authors || []);
+      const fetchedAuthors = res?.authors || [];
+      const pagination = res?.pagination || { page: 1, pages: 1 };
+
+      if (currentPage === 1) {
+        setAuthors(fetchedAuthors);
+      } else {
+        setAuthors((prev) => [...prev, ...fetchedAuthors]);
+      }
+
+      setHasMore(pagination.page < pagination.pages);
     } catch (err) {
       console.error("Authors fetch error:", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  // 3. Debounced Search Integration
+  // 3. Debounced Search Integration (Only for Filter Changes -> Resets to Page 1)
   const debouncedFetch = useCallback(
-    debounce((f) => fetchAuthors(f), 500),
-    [],
+    debounce((f) => {
+      setPage(1);
+      fetchAuthors(f, 1);
+    }, 500),
+    []
   );
 
+  // Trigger debounced fetch when filters change
   useEffect(() => {
     debouncedFetch(filters);
-    return debouncedFetch.cancel;
+    return () => debouncedFetch.cancel();
   }, [filters, debouncedFetch]);
 
+  // Trigger immediate fetch when Page increments (Infinite Scroll)
+  useEffect(() => {
+    if (page > 1) {
+      fetchAuthors(filters, page);
+    }
+  }, [page]);
+
+  // 4. Intersection Observer for Infinite Scrolling
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // If the target is visible, and we have more items, and we aren't currently loading anything
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+          setPage((prevPage) => prevPage + 1);
+        }
+      },
+      { threshold: 0.1 } // Trigger slightly before it comes fully into view
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) observer.unobserve(observerTarget.current);
+    };
+  }, [hasMore, loading, loadingMore]);
+
   // --- Handlers ---
-  const updateFilter = (key, value) =>
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const updateFilter = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
   const handleSearchToggle = () => {
     setIsSearchOpen(!isSearchOpen);
@@ -87,10 +131,12 @@ export default function AuthorsListingPage() {
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const CATEGORY_LIMIT = 7;
-  const displayedCategories = showAllCategories
-    ? categories
-    : categories.slice(0, CATEGORY_LIMIT);
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, CATEGORY_LIMIT);
   const hasMoreCategories = categories.length > CATEGORY_LIMIT;
 
   const staggerContainer = {
@@ -100,9 +146,7 @@ export default function AuthorsListingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans pb-24">
-      {/* ========================================================== */}
-      {/* 1. HEADER & SEARCH SECTION                                 */}
-      {/* ========================================================== */}
+      {/* 1. HEADER & SEARCH SECTION */}
       <section className="pt-24 pb-10 bg-card border-b border-border shadow-sm z-30">
         <Container>
           <div className="flex flex-col md:flex-row items-end justify-between gap-8 pb-8 border-b border-border">
@@ -203,12 +247,11 @@ export default function AuthorsListingPage() {
         </Container>
       </section>
 
-      {/* ========================================================== */}
-      {/* 2. AUTHORS LIST (Horizontal Cards)                           */}
-      {/* ========================================================== */}
+      {/* 2. AUTHORS LIST & INFINITE SCROLL */}
       <section className="py-16">
         <Container className="max-w-5xl">
           {loading ? (
+            /* Initial Loading State */
             <div className="space-y-6">
               {[1, 2, 3].map((i) => (
                 <AuthorHorizontalSkeleton key={i} />
@@ -217,38 +260,83 @@ export default function AuthorsListingPage() {
           ) : (
             <>
               {authors.length > 0 ? (
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  variants={staggerContainer}
-                  className="flex flex-col gap-6"
-                >
-                  <AnimatePresence mode="popLayout">
-                    {authors.map((author) => (
-                      <motion.div
-                        key={author.id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
+                <>
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={staggerContainer}
+                    className="flex flex-col gap-6"
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {authors.map((author) => (
+                        <motion.div
+                          key={author.id}
+                          layout
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                        >
+                          <AuthorHorizontalCard author={author} />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+
+                  {/* Loading More State (2 Skeletons) */}
+                  {loadingMore && (
+                    <div className="flex flex-col gap-6 mt-6">
+                      {[1, 2].map((i) => (
+                        <div key={`loading-more-${i}`} className="opacity-60 animate-pulse">
+                          <AuthorHorizontalSkeleton />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Invisible Target for Intersection Observer */}
+                  <div ref={observerTarget} className="h-10 w-full mt-4" />
+
+                  {/* Reached End Section */}
+                  {!hasMore && !loadingMore && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-16 py-12 flex flex-col items-center justify-center text-center border-t border-border/50"
+                    >
+                      <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-muted-foreground mb-4">
+                        <Filter size={20} />
+                      </div>
+                      <h3 className="text-xl font-serif font-bold text-foreground mb-2">
+                        You've reached the end
+                      </h3>
+                      <p className="text-sm text-muted-foreground max-w-md mb-8">
+                        You have viewed all the brilliant minds available under your current filters. Adjust your search to discover more.
+                      </p>
+                      <Button 
+                        onPress={scrollToTop}
+                        variant="bordered"
+                        radius="full"
+                        startContent={<ArrowUp size={16} />}
+                        className="bg-card font-bold uppercase tracking-widest text-xs border-border hover:bg-foreground hover:text-background transition-colors px-6"
                       >
-                        <AuthorHorizontalCard author={author} />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
+                        Back to top
+                      </Button>
+                    </motion.div>
+                  )}
+                </>
               ) : (
-                <div className="py-20 flex flex-col items-center justify-center text-center border border-dashed border-border/50 bg-card/30">
+                /* No Authors Found State */
+                <div className="py-20 flex flex-col items-center justify-center text-center border border-dashed border-border/50 bg-card/30 rounded-3xl">
                   <h3 className="text-2xl font-serif font-bold mb-2">
                     No authors found
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground mb-6">
                     Try adjusting your search or expertise filters.
                   </p>
                   <Button
                     variant="bordered"
                     radius="full"
-                    className="mt-6 font-bold uppercase tracking-widest text-[10px] px-8 border-border hover:bg-foreground hover:text-background transition-all"
+                    className="font-bold uppercase tracking-widest text-[10px] px-8 border-border hover:bg-foreground hover:text-background transition-all"
                     onPress={() => setFilters({ search: "", category: "All" })}
                   >
                     Clear Filters
@@ -262,8 +350,6 @@ export default function AuthorsListingPage() {
     </div>
   );
 }
-
-// --- UPDATED HORIZONTAL AUTHOR CARD ---
 
 export const AuthorHorizontalCard = ({ author }) => {
   // Use the first category as the "Primary Role", fallback to "Contributor"

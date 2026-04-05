@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { VerticalArticleCard } from "@/components/shared/Article";
 import { VerticalCardSkeleton } from "@/components/shared/Article";
 import ArticleService from "@/services/article.service";
+import AuthorService from "@/services/author.service";
 
 export default function AuthorArticles({ authorId }) {
   const [articles, setArticles] = useState([]);
@@ -17,9 +18,9 @@ export default function AuthorArticles({ authorId }) {
   const fetchArticles = async (pageNum = 1) => {
     try {
       pageNum === 1 ? setLoading(true) : setLoadingMore(true);
-      const res = await ArticleService.getByAuthor(authorId, { page: pageNum, limit: 6 });
-      
-      setArticles(prev => pageNum === 1 ? res : [...prev, ...res]);
+      const res = await AuthorService.getPublishedArticles(authorId, { page: pageNum, limit: 6 });
+      const fetchedArticles = res.articles || [];
+      setArticles(prev => pageNum === 1 ? fetchedArticles : [...prev, ...fetchedArticles]);
       setPagination(res.pagination);
     } catch (err) {
       console.error("Failed to load author articles", err);
@@ -55,6 +56,8 @@ export default function AuthorArticles({ authorId }) {
 
   return (
     <div className="py-10 flex flex-col gap-10">
+      
+      {/* 1. LOADED ARTICLES GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
         {articles.map((article) => (
           <motion.div key={article.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -63,9 +66,30 @@ export default function AuthorArticles({ authorId }) {
         ))}
       </div>
       
-      <div ref={loaderRef} className="h-16 flex justify-center items-center">
-        {loadingMore && <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground"><Loader2 className="animate-spin" size={16}/> Loading More</div>}
+      {/* 2. INFINITE SCROLL TRIGGER & SKELETON ROW */}
+      <div ref={loaderRef} className="w-full">
+        {loadingMore && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+            
+            {/* Skeleton 1: Always visible (Mobile, Tablet, Desktop) */}
+            <div className="block">
+              <VerticalCardSkeleton />
+            </div>
+            
+            {/* Skeleton 2: Visible on Tablet and Desktop only */}
+            <div className="hidden md:block">
+              <VerticalCardSkeleton />
+            </div>
+            
+            {/* Skeleton 3: Visible on Desktop only */}
+            <div className="hidden lg:block">
+              <VerticalCardSkeleton />
+            </div>
+            
+          </div>
+        )}
       </div>
+      
     </div>
   );
 }

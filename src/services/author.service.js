@@ -33,6 +33,10 @@ const AuthorService = {
     const response = await api.get(`/authors/${id}/collections`, { params });
     return response.data;
   },
+  getPublishedArticles: async (authorId, params = {}) => {
+    const response = await api.get(`/authors/${authorId}/articles/active`, { params });
+    return response.data;
+  },
 };
 
 export default AuthorService;

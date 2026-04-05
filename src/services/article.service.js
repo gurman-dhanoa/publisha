@@ -10,10 +10,6 @@ const ArticleService = {
     const response = await api.get(`/articles/slug/${slug}`);
     return response.data;
   },
-  getByAuthor: async (authorId, params = {}) => {
-    const response = await api.get(`/articles/author/${authorId}`, { params });
-    return response.data;
-  },
 
   create: async (formData) => {
     // Headers are auto-set by axios for FormData, but explicit content-type can ensure boundaries are correct
