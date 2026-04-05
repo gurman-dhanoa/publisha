@@ -91,7 +91,7 @@ export default function CollectionDetailPage() {
               </motion.div>
 
               <motion.div variants={fadeUp} className="flex gap-4">
-                <Button as={Link} href={`/articles/${firstArticle?.slug}`} size="lg" radius="none" className="bg-foreground text-background font-bold tracking-widest uppercase text-xs px-8 h-14">
+                <Button as={Link} href={`/articles/${firstArticle?.slug}?collection=${slug}`} size="lg" radius="none" className="bg-foreground text-background font-bold tracking-widest uppercase text-xs px-8 h-14">
                   Start Reading
                 </Button>
                 <Button isIconOnly radius="none" variant="bordered" className="border-border h-14 w-14"><Share2 size={20} /></Button>
@@ -119,7 +119,7 @@ export default function CollectionDetailPage() {
                 <div className="mb-4">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] px-2 py-1 bg-brand-mint/20 rounded-md">Sequence 01 / Introduction</span>
                 </div>
-                <HorizontalArticleCard article={firstArticle} />
+                <HorizontalArticleCard article={firstArticle} articleRedirectURL={`/articles/${firstArticle.slug}?collection=${slug}`} />
               </motion.div>
             )}
 
@@ -129,7 +129,7 @@ export default function CollectionDetailPage() {
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-2 border-l-2 border-brand-mint">
                     Sequence 0{index + 2}
                   </span>
-                  <VerticalArticleCard article={article} />
+                  <VerticalArticleCard article={article} articleRedirectURL={`/articles/${article.slug}?collection=${slug}`} />
                 </motion.div>
               ))}
             </div>

@@ -12,7 +12,7 @@ import { encodeId } from "@/lib/hashids";
 import { formatCompactNumber } from "@/lib/utils";
 
 // --- VERTICAL CARD ---
-export const VerticalArticleCard = ({ article }) => {
+export const VerticalArticleCard = ({ article, articleRedirectURL }) => {
   return (
     <motion.div whileHover={{ y: -4 }} className="w-full h-full max-w-[400px]">
       <Card
@@ -20,7 +20,7 @@ export const VerticalArticleCard = ({ article }) => {
         radius="none"
         className="bg-card border border-border h-full flex flex-col"
       >
-        <Link href={`/articles/${article.slug}`}>
+        <Link href={articleRedirectURL || `/articles/${article.slug}`}>
           <Image
             width={600}
             height={400}
@@ -41,7 +41,7 @@ export const VerticalArticleCard = ({ article }) => {
           </Link>
 
           <Link
-            href={`/articles/${article.slug}`}
+            href={articleRedirectURL || `/articles/${article.slug}`}
             className="flex flex-col gap-3 flex-grow"
           >
             <h3 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase leading-snug line-clamp-2">
@@ -93,7 +93,7 @@ export const VerticalArticleCard = ({ article }) => {
 
 // --- HORIZONTAL CARD ---
 // --- HORIZONTAL CARD (Updated for API consistency) ---
-export const HorizontalArticleCard = ({ article }) => {
+export const HorizontalArticleCard = ({ article, articleRedirectURL }) => {
   if (!article) return null;
 
   return (
@@ -109,7 +109,7 @@ export const HorizontalArticleCard = ({ article }) => {
       >
         {/* Image Section */}
         <Link
-          href={`/articles/${article.slug}`}
+          href={articleRedirectURL || `/articles/${article.slug}`}
           className="w-full md:w-5/12 shrink-0"
         >
           <Image
@@ -128,7 +128,7 @@ export const HorizontalArticleCard = ({ article }) => {
         <CardBody className="w-full p-8 md:p-12 flex flex-col justify-between gap-6">
           <div className="flex flex-col gap-6">
             <Link
-              href={`/articles/${article.slug}`}
+              href={articleRedirectURL || `/articles/${article.slug}`}
               className="flex flex-col gap-4"
             >
               {/* Badge for the first category */}
