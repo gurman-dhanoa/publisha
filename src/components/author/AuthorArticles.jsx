@@ -2,7 +2,8 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUp, FileText } from "lucide-react";
+import { Button } from "@heroui/react";
 import { VerticalArticleCard } from "@/components/shared/Article";
 import { VerticalCardSkeleton } from "@/components/shared/Article";
 import ArticleService from "@/services/article.service";
@@ -45,6 +46,11 @@ export default function AuthorArticles({ authorId }) {
     if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
   }, [pagination, loadingMore]);
+
+  // --- Scroll to Top Handler ---
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   if (loading) return (
     <div className="py-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -90,6 +96,34 @@ export default function AuthorArticles({ authorId }) {
         )}
       </div>
       
+      {/* 3. REACHED END SECTION */}
+      {!loadingMore && pagination.page >= pagination.pages && articles.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-12 py-12 flex flex-col items-center justify-center text-center border-t border-border/50"
+        >
+          <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-muted-foreground mb-4">
+            <FileText size={20} />
+          </div>
+          <h3 className="text-xl font-serif font-bold text-foreground mb-2">
+            End of articles
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-md mb-8">
+            You have viewed all the articles published by this author.
+          </p>
+          <Button 
+            onPress={scrollToTop}
+            variant="bordered"
+            radius="full"
+            startContent={<ArrowUp size={16} />}
+            className="bg-card font-bold uppercase tracking-widest text-xs border-border hover:bg-foreground hover:text-background transition-colors px-6"
+          >
+            Back to top
+          </Button>
+        </motion.div>
+      )}
+
     </div>
   );
 }

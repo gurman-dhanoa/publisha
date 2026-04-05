@@ -1,8 +1,10 @@
-import api from '@/lib/axios';
+import api from "@/lib/axios";
 
 const CollectionService = {
   getPopular: async (limit = 5) => {
-    const response = await api.get('/collections/popular', { params: { limit } });
+    const response = await api.get("/collections/popular", {
+      params: { limit },
+    });
     return response.data;
   },
   getBySlug: async (slug) => {
@@ -13,12 +15,16 @@ const CollectionService = {
     const response = await api.get(`/collections/${id}`);
     return response.data;
   },
-  getByAuthor: async (authorId) => {
-    const response = await api.get(`/collections/author/${authorId}`);
+  getByAuthor: async (authorId, params) => {
+    const response = await api.get(`/collections/author/${authorId}`, {
+      params,
+    });
     return response.data;
   },
-  removeArticle: async (collectionId,articleId) => {
-    const response = await api.delete(`/collections/${collectionId}/articles/${articleId}`);
+  removeArticle: async (collectionId, articleId) => {
+    const response = await api.delete(
+      `/collections/${collectionId}/articles/${articleId}`,
+    );
     return response.data;
   },
   update: async (id, data) => {
