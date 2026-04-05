@@ -52,7 +52,7 @@ export default function PublishPage() {
         
         // A. Load Categories for the Selector
         const catData = await CategoryService.getAll();
-        setCategories(catData || []);
+        setCategories(catData.categories || []);
 
         // B. Handle Edit Mode
         if (slugParam) {
@@ -154,7 +154,7 @@ export default function PublishPage() {
         localStorage.removeItem('publisha_draft');
       }
 
-      router.push('/dashboard'); 
+      router.push('/portal/articles'); 
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || 'Publication failed.');
