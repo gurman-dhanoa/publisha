@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Avatar, Card, CardBody, Chip, Skeleton } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, ArrowRight } from "lucide-react";
+import { Search, Filter, ArrowRight, Eye, Heart, FileText } from "lucide-react";
 import debounce from "lodash/debounce";
 import Link from "next/link";
 import dayjs from "dayjs";
@@ -11,7 +11,7 @@ import { encodeId } from "@/lib/hashids";
 import Container from "@/components/shared/Container";
 import AuthorService from "@/services/author.service";
 import CategoryService from "@/services/category.service";
-
+import { formatCompactNumber } from "@/lib/utils";
 export default function AuthorsListingPage() {
   // --- UI States ---
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -33,7 +33,7 @@ export default function AuthorsListingPage() {
     const fetchMetadata = async () => {
       try {
         const cats = await CategoryService.getAll();
-        setCategories(cats);
+        setCategories(cats.categories || []);
       } catch (err) {
         console.error("Categories fetch error:", err);
       }
@@ -47,7 +47,7 @@ export default function AuthorsListingPage() {
       setLoading(true);
       // Constructing params based on what AuthorService accepts
       const params = {
-        category:
+        categoryId:
           currentFilters.category === "All"
             ? undefined
             : currentFilters.category,
@@ -55,7 +55,7 @@ export default function AuthorsListingPage() {
       };
 
       const res = await AuthorService.getAll(params);
-      setAuthors(res);
+      setAuthors(res.authors || []);
     } catch (err) {
       console.error("Authors fetch error:", err);
     } finally {
@@ -183,9 +183,9 @@ export default function AuthorsListingPage() {
             {displayedCategories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => updateFilter("category", cat.slug)}
+                onClick={() => updateFilter("category", cat.id)}
                 className={`px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all
-                  ${filters.category === cat.slug ? "bg-foreground text-background shadow-md" : "bg-background text-muted-foreground border border-border hover:border-foreground hover:text-foreground"}`}
+                  ${filters.category === cat.id ? "bg-foreground text-background shadow-md" : "bg-background text-muted-foreground border border-border hover:border-foreground hover:text-foreground"}`}
               >
                 {cat.name}
               </button>
@@ -249,7 +249,7 @@ export default function AuthorsListingPage() {
                     variant="bordered"
                     radius="full"
                     className="mt-6 font-bold uppercase tracking-widest text-[10px] px-8 border-border hover:bg-foreground hover:text-background transition-all"
-                    onClick={() => setFilters({ search: "", category: "All" })}
+                    onPress={() => setFilters({ search: "", category: "All" })}
                   >
                     Clear Filters
                   </Button>
@@ -265,7 +265,7 @@ export default function AuthorsListingPage() {
 
 // --- UPDATED HORIZONTAL AUTHOR CARD ---
 
-const AuthorHorizontalCard = ({ author }) => {
+export const AuthorHorizontalCard = ({ author }) => {
   // Use the first category as the "Primary Role", fallback to "Contributor"
   const primaryCategory = author.categories?.[0]?.name || "Contributor";
   const displayCategories = author.categories || [];
@@ -318,10 +318,33 @@ const AuthorHorizontalCard = ({ author }) => {
             ))}
           </div>
 
-          {/* Joined Date for Desktop */}
-          <div className="hidden md:flex items-center gap-8 mt-4 pt-6 border-t border-border/50">
+          {/* Stats & Joined Date */}
+          <div className="flex flex-wrap justify-center md:justify-start items-center gap-x-6 gap-y-3 mt-4 pt-6 border-t border-border/50">
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <div className="flex items-center gap-1.5" title="Total Articles">
+                <FileText size={14} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  {formatCompactNumber(author.total_articles)} Articles
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5" title="Total Views">
+                <Eye size={14} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  {formatCompactNumber(author.total_views)} Views
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5" title="Total Likes">
+                <Heart size={14} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  {formatCompactNumber(author.total_likes)} Likes
+                </span>
+              </div>
+            </div>
+            
+            <span className="hidden md:block w-1 h-1 rounded-full bg-border" />
+            
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
-              Joined {dayjs(author.created_at).format("MMMM YYYY")}
+              Joined {dayjs(author.created_at).format("MMM YYYY")}
             </p>
           </div>
         </div>
@@ -330,7 +353,6 @@ const AuthorHorizontalCard = ({ author }) => {
         <div className="flex flex-col justify-center items-center md:items-end shrink-0 border-t md:border-t-0 md:border-l border-border/50 pt-6 md:pt-0 md:pl-8">
           <Button
             as={Link}
-            // ENCODE THE ID HERE
             href={`/authors/${encodeId(author.id)}`}
             radius="full"
             className="bg-foreground text-background font-bold text-xs uppercase tracking-widest px-8 group-hover:bg-brand-blue transition-colors shadow-sm"
@@ -345,25 +367,41 @@ const AuthorHorizontalCard = ({ author }) => {
 };
 
 // --- SKELETON ---
-const AuthorHorizontalSkeleton = () => (
+export const AuthorHorizontalSkeleton = () => (
   <Card
     shadow="none"
-    className="border border-border bg-card rounded-none md:rounded-2xl h-[240px]"
+    className="border border-border bg-card rounded-none md:rounded-2xl min-h-[240px]"
   >
-    <CardBody className="p-8 flex flex-row items-stretch gap-8">
-      <Skeleton className="w-28 h-28 rounded-full shrink-0" />
-      <div className="flex-grow flex flex-col justify-center">
-        <Skeleton className="w-1/3 h-8 mb-2" />
-        <Skeleton className="w-1/4 h-3 mb-4" />
-        <Skeleton className="w-3/4 h-4 mb-2" />
-        <Skeleton className="w-1/2 h-4 mb-4" />
-        <div className="flex gap-2">
-          <Skeleton className="w-16 h-6 rounded-full" />
-          <Skeleton className="w-16 h-6 rounded-full" />
+    <CardBody className="p-8 flex flex-col md:flex-row items-center md:items-stretch gap-8">
+      {/* Avatar Skeleton */}
+      <div className="flex flex-col items-center shrink-0 w-32">
+        <Skeleton className="w-24 h-24 md:w-28 md:h-28 rounded-full mb-4" />
+      </div>
+
+      {/* Content Skeleton */}
+      <div className="flex-grow flex flex-col justify-center w-full">
+        <Skeleton className="w-1/3 h-8 mb-2 mx-auto md:mx-0" />
+        <Skeleton className="w-1/4 h-3 mb-6 mx-auto md:mx-0" />
+        
+        <Skeleton className="w-full max-w-xl h-4 mb-2 mx-auto md:mx-0" />
+        <Skeleton className="w-2/3 max-w-md h-4 mb-6 mx-auto md:mx-0" />
+        
+        <div className="flex justify-center md:justify-start gap-2 mb-4">
+          <Skeleton className="w-20 h-6 rounded-full" />
+          <Skeleton className="w-24 h-6 rounded-full" />
+        </div>
+
+        {/* Stats Row Skeleton */}
+        <div className="flex justify-center md:justify-start gap-4 mt-auto pt-6 border-t border-border/50">
+          <Skeleton className="w-20 h-4 rounded-md" />
+          <Skeleton className="w-20 h-4 rounded-md" />
+          <Skeleton className="w-20 h-4 rounded-md" />
         </div>
       </div>
-      <div className="shrink-0 flex items-center pl-8 border-l border-border/50">
-        <Skeleton className="w-24 h-10 rounded-full" />
+
+      {/* Button Skeleton */}
+      <div className="shrink-0 flex items-center justify-center md:justify-end border-t md:border-t-0 md:border-l border-border/50 pt-6 md:pt-0 md:pl-8 w-full md:w-auto">
+        <Skeleton className="w-32 h-10 rounded-full" />
       </div>
     </CardBody>
   </Card>

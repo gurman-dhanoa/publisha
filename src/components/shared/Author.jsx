@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardBody, Avatar, Skeleton, Button } from "@heroui/react";
 import Link from "next/link";
 import { encodeId } from "@/lib/hashids";
+import { formatCompactNumber } from "@/lib/utils";
 
 export const AuthorCard = ({ author }) => {
   return (
@@ -47,10 +48,19 @@ export const AuthorCard = ({ author }) => {
           <div className="w-px h-8 bg-border/50" />
           <div className="flex flex-col">
             <span className="text-foreground font-bold text-lg leading-none">
-              {(author.total_views / 1000).toFixed(1)}k
+              {formatCompactNumber(author.total_likes || 0)}
             </span>
             <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mt-1">
-              Reach
+              Likes
+            </span>
+          </div>
+          <div className="w-px h-8 bg-border/50" />
+          <div className="flex flex-col">
+            <span className="text-foreground font-bold text-lg leading-none">
+              {formatCompactNumber(author.total_views || 0)}
+            </span>
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mt-1">
+              Views
             </span>
           </div>
         </div>

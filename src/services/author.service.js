@@ -5,8 +5,8 @@ const AuthorService = {
     const response = await api.get("/authors/trending", { params: { limit } });
     return response.data; // Array of author objects
   },
-  getAll: async () => {
-    const response = await api.get("/authors");
+  getAll: async (params) => {
+    const response = await api.get("/authors", { params });
     return response.data; // Array of author objects
   },
   getById: async (id) => {

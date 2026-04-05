@@ -9,6 +9,7 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import { SearchService } from "@/services/search.service";
 import { encodeId } from "@/lib/hashids";
+import Image from "next/image";
 
 export default function GlobalSearchModal({ isOpen, onOpen, onClose }) {
   const [query, setQuery] = useState("");
@@ -145,7 +146,7 @@ export default function GlobalSearchModal({ isOpen, onOpen, onClose }) {
                           >
                             <div className="shrink-0 w-16 h-12 rounded-md overflow-hidden bg-muted mr-5 border border-border/50">
                               {article.image_url ? (
-                                <img src={article.image_url} alt={article.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <Image src={article.image_url} alt={article.name} width={300} height={200} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-muted-foreground"><FileText size={16}/></div>
                               )}

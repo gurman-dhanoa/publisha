@@ -9,6 +9,7 @@ import Image from "next/image";
 import LikeButton from "./LikeButton";
 import ShareButton from "./ShareButton";
 import { encodeId } from "@/lib/hashids";
+import { formatCompactNumber } from "@/lib/utils";
 
 // --- VERTICAL CARD ---
 export const VerticalArticleCard = ({ article }) => {
@@ -67,11 +68,11 @@ export const VerticalArticleCard = ({ article }) => {
           <div className="flex items-center gap-6 mt-4 text-muted-foreground">
             <div className="flex items-center gap-2">
               <Eye strokeWidth={1.5} size={20} />
-              <span className="text-sm">{article.views_count || 0}</span>
+              <span className="text-sm">{formatCompactNumber(article.views_count || 0)}</span>
             </div>
             <LikeButton
               articleId={article.id}
-              initialCount={article.likes_count}
+              initialCount={formatCompactNumber(article.likes_count)}
               initialLiked={article.is_liked}
             />
             <div className="flex-grow" />
@@ -176,13 +177,13 @@ export const HorizontalArticleCard = ({ article }) => {
                 className="group-hover:text-foreground transition-colors"
               />
               <span className="text-sm font-medium">
-                {article.views_count || 0}
+                {formatCompactNumber(article.views_count || 0)}
               </span>
             </div>
 
             <LikeButton
               articleId={article.id}
-              initialCount={article.likes_count}
+              initialCount={formatCompactNumber(article.likes_count)}
               initialLiked={article.is_liked}
             />
 

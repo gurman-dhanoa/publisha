@@ -65,7 +65,7 @@ export default function HomePage() {
       <TrendingSection />
 
       <CollectionsSection />
-      
+
       <section className="py-24 bg-surface-dark text-white relative overflow-hidden">
         {/* Subtle background decoration */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-surface-darker to-transparent rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/3" />
@@ -111,6 +111,8 @@ export default function HomePage() {
                 Start Writing Now
               </Button>
               <Button
+                as={Link}
+                href="/about"
                 size="lg"
                 radius="full"
                 variant="bordered"
@@ -151,7 +153,7 @@ export default function HomePage() {
           </motion.div>
         </Container>
       </section>
-      
+
       <AuthorsSection />
     </div>
   );

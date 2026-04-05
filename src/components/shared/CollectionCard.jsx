@@ -4,6 +4,7 @@ import { Card, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { formatCompactNumber } from "@/lib/utils";
 
 export const CollectionCard = ({ collection }) => {
   const articles = collection.preview_articles || [];
@@ -56,10 +57,10 @@ export const CollectionCard = ({ collection }) => {
             className="relative z-20 w-full h-full overflow-hidden"
           >
             <Image
-              height={500}
-              width={600}
+              height={600}
+              width={700}
               alt={collection.name}
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               src={
                 displayArticles[0]?.image_url ||
                 "https://via.placeholder.com/400x240"
@@ -89,7 +90,7 @@ export const CollectionCard = ({ collection }) => {
               Curated by {collection.author_name}
             </p>
             <p className="text-[10px] text-brand-blue font-bold uppercase">
-              {Number(collection.total_collection_views || 0).toLocaleString()} Views
+              {formatCompactNumber(collection.total_collection_views || 0).toLocaleString()} Views
             </p>
           </div>
         </div>
