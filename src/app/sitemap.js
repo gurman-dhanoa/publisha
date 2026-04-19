@@ -1,7 +1,7 @@
 import { encodeId } from "@/lib/hashids";
 
 // Revalidate this sitemap every 1 hour (3600 seconds)
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export default async function sitemap() {
   const baseUrl = process.env.NEXT_PUBLIC_URL;
@@ -21,6 +21,21 @@ export default async function sitemap() {
     },
     {
       url: `${baseUrl}/articles`,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/about`,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/collection`,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/contact`,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
